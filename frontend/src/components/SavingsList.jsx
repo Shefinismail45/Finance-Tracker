@@ -3,7 +3,7 @@ import { Trash2, Edit3, Plus, History, PiggyBank, Target, Sparkles } from 'lucid
 import { getRandomQuote } from '../quotes';
 import { CardSkeleton } from './Skeleton';
 
-export function SavingsList({ goals, onEdit, onDelete, onLogDeposit, onViewHistory, loading }) {
+export function SavingsList({ goals, onEdit, onDelete, onLogDeposit, onViewHistory, onAddNew, loading }) {
   if (loading) {
     return <CardSkeleton count={3} />;
   }
@@ -13,11 +13,34 @@ export function SavingsList({ goals, onEdit, onDelete, onLogDeposit, onViewHisto
   if (goals.length === 0) {
     return (
       <div className="empty-state">
-        <div className="row-icon-circle savings" style={{ width: '3rem', height: '3rem' }}>
-          <PiggyBank size={24} />
+        <div className="row-icon-circle savings" style={{ width: '3.25rem', height: '3.25rem' }}>
+          <PiggyBank size={26} />
         </div>
-        <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>No savings goals created yet</div>
-        <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Start building an emergency cushion or saving for life goals.</div>
+        <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)' }}>No savings goals created yet</div>
+        <div style={{ fontSize: '0.88rem', color: 'var(--text-muted)', maxWidth: '420px' }}>Start building an emergency cushion or saving for life milestones.</div>
+
+        {onAddNew && (
+          <button
+            className="btn-primary"
+            onClick={onAddNew}
+            style={{
+              padding: '0.75rem 1.6rem',
+              fontSize: '0.95rem',
+              fontWeight: 700,
+              borderRadius: '9999px',
+              marginTop: '0.35rem',
+              boxShadow: '0 4px 14px rgba(37, 99, 235, 0.35)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              cursor: 'pointer'
+            }}
+          >
+            <Plus size={18} />
+            <span>Add Goal</span>
+          </button>
+        )}
+
         <div className="empty-state-quote">
           "{quote.quote}"
           <div style={{ fontWeight: 700, marginTop: '0.25rem', color: 'var(--text-primary)' }}>— {quote.author}</div>

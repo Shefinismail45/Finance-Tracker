@@ -12,7 +12,8 @@ export function TopNavbar({
   currency = 'USD',
   onSelectCurrency,
   onOpenSearch,
-  onOpenNotifications 
+  onOpenNotifications,
+  hasEntries = true
 }) {
   const rawName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'User';
   const firstName = rawName.trim().split(/\s+/)[0] || 'User';
@@ -138,8 +139,8 @@ export function TopNavbar({
           {theme === 'dark' ? <Moon size={15} color="#38bdf8" /> : <Sun size={15} color="#f59e0b" />}
         </button>
 
-        {/* Quick Add Button on Top Navbar */}
-        {activeTab !== 'dashboard' && (
+        {/* Quick Add Button on Top Navbar (Visible after at least 1 entry is present) */}
+        {activeTab !== 'dashboard' && hasEntries && (
           <button
             className="btn-primary"
             onClick={onOpenForm}

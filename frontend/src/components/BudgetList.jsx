@@ -1,9 +1,9 @@
 import React from 'react';
-import { Trash2, Edit3, AlertTriangle, PieChart, Sparkles } from 'lucide-react';
+import { Trash2, Edit3, AlertTriangle, PieChart, Sparkles, Plus } from 'lucide-react';
 import { getRandomQuote } from '../quotes';
 import { BudgetSkeleton } from './Skeleton';
 
-export function BudgetList({ budgets, onEdit, onDelete, loading }) {
+export function BudgetList({ budgets, onEdit, onDelete, onAddNew, loading }) {
   if (loading) {
     return <BudgetSkeleton count={3} />;
   }
@@ -33,11 +33,34 @@ export function BudgetList({ budgets, onEdit, onDelete, loading }) {
       {/* Budget List View */}
       {budgets.length === 0 ? (
         <div className="empty-state">
-          <div className="row-icon-circle" style={{ width: '3rem', height: '3rem', background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b' }}>
-            <PieChart size={24} />
+          <div className="row-icon-circle" style={{ width: '3.25rem', height: '3.25rem', background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b' }}>
+            <PieChart size={26} />
           </div>
-          <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>No category budgets configured</div>
-          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Set spending targets for Groceries, Dining, Rent, or Shopping.</div>
+          <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)' }}>No category budgets configured</div>
+          <div style={{ fontSize: '0.88rem', color: 'var(--text-muted)', maxWidth: '420px' }}>Set spending targets for Groceries, Dining, Rent, or Shopping to stay disciplined.</div>
+
+          {onAddNew && (
+            <button
+              className="btn-primary"
+              onClick={onAddNew}
+              style={{
+                padding: '0.75rem 1.6rem',
+                fontSize: '0.95rem',
+                fontWeight: 700,
+                borderRadius: '9999px',
+                marginTop: '0.35rem',
+                boxShadow: '0 4px 14px rgba(37, 99, 235, 0.35)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                cursor: 'pointer'
+              }}
+            >
+              <Plus size={18} />
+              <span>Set Budget</span>
+            </button>
+          )}
+
           <div className="empty-state-quote">
             "{quote.quote}"
             <div style={{ fontWeight: 700, marginTop: '0.25rem', color: 'var(--text-primary)' }}>— {quote.author}</div>

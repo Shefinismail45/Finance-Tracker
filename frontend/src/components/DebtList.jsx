@@ -1,9 +1,9 @@
 import React from 'react';
-import { Trash2, Edit3, DollarSign, History, CheckCircle2, CreditCard, ShieldAlert } from 'lucide-react';
+import { Trash2, Edit3, DollarSign, History, CheckCircle2, CreditCard, ShieldAlert, Plus } from 'lucide-react';
 import { getRandomQuote } from '../quotes';
 import { CardSkeleton } from './Skeleton';
 
-export function DebtList({ debts, onEdit, onDelete, onLogPayment, onViewHistory, loading }) {
+export function DebtList({ debts, onEdit, onDelete, onLogPayment, onViewHistory, onAddNew, loading }) {
   if (loading) {
     return <CardSkeleton count={3} />;
   }
@@ -13,11 +13,34 @@ export function DebtList({ debts, onEdit, onDelete, onLogPayment, onViewHistory,
   if (debts.length === 0) {
     return (
       <div className="empty-state">
-        <div className="row-icon-circle debt" style={{ width: '3rem', height: '3rem' }}>
-          <CreditCard size={24} />
+        <div className="row-icon-circle debt" style={{ width: '3.25rem', height: '3.25rem' }}>
+          <CreditCard size={26} />
         </div>
-        <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>Debt Free! Zero debts tracked</div>
-        <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>If you have credit cards or personal loans to pay off, track them here.</div>
+        <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)' }}>Debt Free! Zero debts tracked</div>
+        <div style={{ fontSize: '0.88rem', color: 'var(--text-muted)', maxWidth: '420px' }}>Track credit cards, personal loans, or zero-interest debts to monitor repayments with the debt avalanche method.</div>
+
+        {onAddNew && (
+          <button
+            className="btn-primary"
+            onClick={onAddNew}
+            style={{
+              padding: '0.75rem 1.6rem',
+              fontSize: '0.95rem',
+              fontWeight: 700,
+              borderRadius: '9999px',
+              marginTop: '0.35rem',
+              boxShadow: '0 4px 14px rgba(37, 99, 235, 0.35)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              cursor: 'pointer'
+            }}
+          >
+            <Plus size={18} />
+            <span>Add Debt</span>
+          </button>
+        )}
+
         <div className="empty-state-quote">
           "{quote.quote}"
           <div style={{ fontWeight: 700, marginTop: '0.25rem', color: 'var(--text-primary)' }}>— {quote.author}</div>

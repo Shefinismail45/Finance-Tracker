@@ -1,9 +1,9 @@
 import React from 'react';
-import { Trash2, Edit3, ArrowUpRight } from 'lucide-react';
+import { Trash2, Edit3, ArrowUpRight, Plus } from 'lucide-react';
 import { getRandomQuote } from '../quotes';
 import { ListSkeleton } from './Skeleton';
 
-export function IncomeList({ incomes, onEdit, onDelete, loading }) {
+export function IncomeList({ incomes, onEdit, onDelete, onAddNew, loading }) {
   if (loading) {
     return <ListSkeleton count={3} />;
   }
@@ -13,11 +13,34 @@ export function IncomeList({ incomes, onEdit, onDelete, loading }) {
   if (incomes.length === 0) {
     return (
       <div className="empty-state">
-        <div className="row-icon-circle income" style={{ width: '3rem', height: '3rem' }}>
-          <ArrowUpRight size={24} />
+        <div className="row-icon-circle income" style={{ width: '3.25rem', height: '3.25rem' }}>
+          <ArrowUpRight size={26} />
         </div>
-        <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>No income streams added yet</div>
-        <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Add your salary, freelance retainers, or investment inflows.</div>
+        <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)' }}>No income streams added yet</div>
+        <div style={{ fontSize: '0.88rem', color: 'var(--text-muted)', maxWidth: '420px' }}>Add your salary, freelance retainers, bonus, or investment inflows.</div>
+
+        {onAddNew && (
+          <button
+            className="btn-primary"
+            onClick={onAddNew}
+            style={{
+              padding: '0.75rem 1.6rem',
+              fontSize: '0.95rem',
+              fontWeight: 700,
+              borderRadius: '9999px',
+              marginTop: '0.35rem',
+              boxShadow: '0 4px 14px rgba(37, 99, 235, 0.35)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              cursor: 'pointer'
+            }}
+          >
+            <Plus size={18} />
+            <span>Add Income</span>
+          </button>
+        )}
+
         <div className="empty-state-quote">
           "{quote.quote}"
           <div style={{ fontWeight: 700, marginTop: '0.25rem', color: 'var(--text-primary)' }}>— {quote.author}</div>

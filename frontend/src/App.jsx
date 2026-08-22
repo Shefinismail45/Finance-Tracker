@@ -376,6 +376,17 @@ export default function App() {
     return <LoginPage onAuthSuccess={(userObj) => setUser(userObj)} />;
   }
 
+  const getActiveTabHasEntries = () => {
+    switch (activeTab) {
+      case 'expense': return expenses.length > 0;
+      case 'income': return incomes.length > 0;
+      case 'debt': return debts.length > 0;
+      case 'savings': return savingsGoals.length > 0;
+      case 'budget': return budgets.length > 0;
+      default: return false;
+    }
+  };
+
   // 3. MAIN DASHBOARD APPLICATION
   return (
     <div className="app-layout">
@@ -405,6 +416,7 @@ export default function App() {
           onSelectCurrency={handleSelectCurrency}
           onOpenSearch={() => setIsSearchOpen(true)}
           onOpenNotifications={() => setIsNotificationsOpen(true)}
+          hasEntries={getActiveTabHasEntries()}
         />
 
         <main className="content-body">
@@ -430,6 +442,7 @@ export default function App() {
                 expenses={expenses}
                 onEdit={(exp) => { setEditingItem(exp); setIsFormOpen(true); }}
                 onDelete={handleDeleteExpense}
+                onAddNew={() => { setEditingItem(null); setIsFormOpen(true); }}
                 loading={loading}
               />
             </>
@@ -447,6 +460,7 @@ export default function App() {
                 incomes={incomes}
                 onEdit={(inc) => { setEditingItem(inc); setIsFormOpen(true); }}
                 onDelete={handleDeleteIncome}
+                onAddNew={() => { setEditingItem(null); setIsFormOpen(true); }}
                 loading={loading}
               />
             </>
@@ -466,6 +480,7 @@ export default function App() {
                 onDelete={handleDeleteDebt}
                 onLogPayment={(d) => setPaymentDebtTarget(d)}
                 onViewHistory={(d) => setPaymentDebtTarget(d)}
+                onAddNew={() => { setEditingItem(null); setIsFormOpen(true); }}
                 loading={loading}
               />
             </>
@@ -481,6 +496,7 @@ export default function App() {
                 onDelete={handleDeleteSavingsGoal}
                 onLogDeposit={(g) => setContributionGoalTarget(g)}
                 onViewHistory={(g) => setContributionGoalTarget(g)}
+                onAddNew={() => { setEditingItem(null); setIsFormOpen(true); }}
                 loading={loading}
               />
             </>
@@ -491,6 +507,7 @@ export default function App() {
               budgets={budgets}
               onEdit={(b) => { setEditingItem(b); setIsFormOpen(true); }}
               onDelete={handleDeleteBudget}
+              onAddNew={() => { setEditingItem(null); setIsFormOpen(true); }}
               loading={loading}
             />
           )}
@@ -503,8 +520,8 @@ export default function App() {
         />
       </div>
 
-      {/* Floating "+" Button for Mobile */}
-      {activeTab !== 'dashboard' && (
+      {/* Floating "+" Button for Mobile (Visible after at least 1 entry is present) */}
+      {activeTab !== 'dashboard' && getActiveTabHasEntries() && (
         <button
           className="fab-btn"
           onClick={() => { setEditingItem(null); setIsFormOpen(true); }}

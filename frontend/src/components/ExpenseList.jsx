@@ -1,9 +1,9 @@
 import React from 'react';
-import { Trash2, Edit3, Repeat, ArrowDownRight, Tag, Quote } from 'lucide-react';
+import { Trash2, Edit3, Repeat, ArrowDownRight, Tag, Quote, Plus } from 'lucide-react';
 import { getRandomQuote } from '../quotes';
 import { ListSkeleton } from './Skeleton';
 
-export function ExpenseList({ expenses, onEdit, onDelete, loading }) {
+export function ExpenseList({ expenses, onEdit, onDelete, onAddNew, loading }) {
   if (loading) {
     return <ListSkeleton count={4} />;
   }
@@ -13,11 +13,34 @@ export function ExpenseList({ expenses, onEdit, onDelete, loading }) {
   if (expenses.length === 0) {
     return (
       <div className="empty-state">
-        <div style={{ width: '3rem', height: '3rem', borderRadius: '50%', background: 'var(--danger-bg)', color: 'var(--danger)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <ArrowDownRight size={24} />
+        <div style={{ width: '3.25rem', height: '3.25rem', borderRadius: '50%', background: 'var(--danger-bg)', color: 'var(--danger)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <ArrowDownRight size={26} />
         </div>
-        <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>No expenses logged yet</div>
-        <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Tap "+ Log Expense" above to record your first transaction.</div>
+        <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)' }}>No expenses logged yet</div>
+        <div style={{ fontSize: '0.88rem', color: 'var(--text-muted)', maxWidth: '420px' }}>Record your daily expenses, bills, and purchases to track your spending habits.</div>
+
+        {onAddNew && (
+          <button
+            className="btn-primary"
+            onClick={onAddNew}
+            style={{
+              padding: '0.75rem 1.6rem',
+              fontSize: '0.95rem',
+              fontWeight: 700,
+              borderRadius: '9999px',
+              marginTop: '0.35rem',
+              boxShadow: '0 4px 14px rgba(37, 99, 235, 0.35)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              cursor: 'pointer'
+            }}
+          >
+            <Plus size={18} />
+            <span>Log Expense</span>
+          </button>
+        )}
+
         <div className="empty-state-quote">
           "{quote.quote}"
           <div style={{ fontWeight: 700, marginTop: '0.25rem', color: 'var(--text-primary)' }}>— {quote.author}</div>
