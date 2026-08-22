@@ -43,8 +43,8 @@ def set_budget(
     if planned_amount <= Decimal("0"):
         raise BudgetValidationError("Planned budget amount must be greater than zero.")
 
-    if period_months < 1:
-        raise BudgetValidationError("Period in months must be at least 1.")
+    if period_months < 0:
+        raise BudgetValidationError("Period in months must be at least 0.")
 
     validate_expense_category(user_id, category_id)
 

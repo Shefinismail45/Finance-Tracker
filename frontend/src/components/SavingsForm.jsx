@@ -8,7 +8,11 @@ export function SavingsForm({ initialData, onSubmit, onClose, submitting }) {
   const [targetAmount, setTargetAmount] = useState(initialData?.target_amount ? String(initialData.target_amount) : '');
   const [currency, setCurrency] = useState(initialData?.currency || 'USD');
   const [contributionAmount, setContributionAmount] = useState(initialData?.contribution_amount ? String(initialData.contribution_amount) : '');
-  const [periodMonths, setPeriodMonths] = useState(initialData?.period_months ? String(initialData.period_months) : '1');
+  const [periodMonths, setPeriodMonths] = useState(
+    initialData?.period_months !== undefined && initialData?.period_months !== null
+      ? String(initialData.period_months)
+      : '1'
+  );
   const [startDate, setStartDate] = useState(
     initialData?.start_date || new Date().toISOString().slice(0, 10)
   );
@@ -27,6 +31,12 @@ export function SavingsForm({ initialData, onSubmit, onClose, submitting }) {
     const numPlanned = parseFloat(contributionAmount);
     if (isNaN(numPlanned) || numPlanned <= 0) {
       setError('Planned contribution amount must be greater than 0.');
+      return;
+    }
+
+    const numPeriod = parseInt(periodMonths);
+    if (isNaN(numPeriod) || numPeriod < 0) {
+      setError('Please select a valid deposit frequency.');
       return;
     }
 
@@ -163,11 +173,17 @@ export function SavingsForm({ initialData, onSubmit, onClose, submitting }) {
                 value={periodMonths}
                 onChange={(e) => setPeriodMonths(e.target.value)}
               >
+                <option value="0">⚡ One-Time / Lump Sum (Not Frequent)</option>
                 <option value="1">Monthly</option>
                 <option value="3">Quarterly</option>
                 <option value="6">Half-Yearly</option>
                 <option value="12">Yearly</option>
               </select>
+              {periodMonths === '0' && (
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem', fontStyle: 'italic' }}>
+                  💡 Single / one-time deposit commitment (not a recurring monthly allocation).
+                </div>
+              )}
             </div>
 
             <div className="form-group">

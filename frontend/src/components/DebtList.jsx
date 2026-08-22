@@ -1,10 +1,11 @@
 import React from 'react';
 import { Trash2, Edit3, DollarSign, History, CheckCircle2, CreditCard, ShieldAlert } from 'lucide-react';
 import { getRandomQuote } from '../quotes';
+import { CardSkeleton } from './Skeleton';
 
 export function DebtList({ debts, onEdit, onDelete, onLogPayment, onViewHistory, loading }) {
   if (loading) {
-    return <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>Loading debt balances...</div>;
+    return <CardSkeleton count={3} />;
   }
 
   const quote = getRandomQuote(3);

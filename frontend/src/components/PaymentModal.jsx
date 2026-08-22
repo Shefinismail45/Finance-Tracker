@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Trash2, Calendar, DollarSign } from 'lucide-react';
 import { api } from '../api';
+import { ModalListSkeleton } from './Skeleton';
 
 export function PaymentModal({ debt, onClose, onPaymentChange }) {
   const [payments, setPayments] = useState([]);
@@ -140,7 +141,7 @@ export function PaymentModal({ debt, onClose, onPaymentChange }) {
         </div>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--text-muted)' }}>Loading payment log...</div>
+          <ModalListSkeleton count={2} />
         ) : payments.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
             No payments recorded for this debt yet.

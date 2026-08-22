@@ -1,10 +1,11 @@
 import React from 'react';
 import { Trash2, Edit3, Plus, History, PiggyBank, Target, Sparkles } from 'lucide-react';
 import { getRandomQuote } from '../quotes';
+import { CardSkeleton } from './Skeleton';
 
 export function SavingsList({ goals, onEdit, onDelete, onLogDeposit, onViewHistory, loading }) {
   if (loading) {
-    return <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>Loading savings goals...</div>;
+    return <CardSkeleton count={3} />;
   }
 
   const quote = getRandomQuote(0);
@@ -59,7 +60,14 @@ export function SavingsList({ goals, onEdit, onDelete, onLogDeposit, onViewHisto
                   )}
                 </div>
                 <div className="row-subtitle" style={{ marginTop: '0.35rem' }}>
-                  <span>Commitment: ${Number(g.contribution_amount).toFixed(2)} / {g.period_months === 1 ? 'month' : `${g.period_months} months`}</span>
+                  <span>
+                    Commitment: ${Number(g.contribution_amount).toFixed(2)}{' '}
+                    {Number(g.period_months) === 0
+                      ? '(One-time lump sum)'
+                      : g.period_months === 1
+                      ? '/ month'
+                      : `/ ${g.period_months} months`}
+                  </span>
                   {g.note && <span>• {g.note}</span>}
                 </div>
               </div>

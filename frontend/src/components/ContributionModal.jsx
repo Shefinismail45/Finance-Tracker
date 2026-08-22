@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Trash2, Calendar, PlusCircle } from 'lucide-react';
 import { api } from '../api';
+import { ModalListSkeleton } from './Skeleton';
 
 export function ContributionModal({ goal, onClose, onContributionChange }) {
   const [contributions, setContributions] = useState([]);
@@ -140,7 +141,7 @@ export function ContributionModal({ goal, onClose, onContributionChange }) {
         </div>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--text-muted)' }}>Loading deposit log...</div>
+          <ModalListSkeleton count={2} />
         ) : contributions.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
             No deposits logged for this goal yet.

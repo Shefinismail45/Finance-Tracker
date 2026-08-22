@@ -1,10 +1,11 @@
 import React from 'react';
 import { Trash2, Edit3, ArrowUpRight } from 'lucide-react';
 import { getRandomQuote } from '../quotes';
+import { ListSkeleton } from './Skeleton';
 
 export function IncomeList({ incomes, onEdit, onDelete, loading }) {
   if (loading) {
-    return <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>Loading income streams...</div>;
+    return <ListSkeleton count={3} />;
   }
 
   const quote = getRandomQuote(2);
@@ -28,8 +29,21 @@ export function IncomeList({ incomes, onEdit, onDelete, loading }) {
   return (
     <div className="list-container">
       {incomes.map((inc) => {
-        const periodText = inc.period_months === 1 ? 'Monthly' : inc.period_months === 3 ? 'Quarterly' : inc.period_months === 12 ? 'Yearly' : `Every ${inc.period_months} mo`;
-        const monthlyAmt = Number(inc.monthly_equivalent || (inc.amount / (inc.period_months || 1)));
+        const isOneTime = Number(inc.period_months) === 0;
+        const periodText = isOneTime
+          ? 'One-Time'
+          : inc.period_months === 1
+          ? 'Monthly'
+          : inc.period_months === 2
+          ? 'Bi-Monthly'
+          : inc.period_months === 3
+          ? 'Quarterly'
+          : inc.period_months === 6
+          ? 'Half-Yearly'
+          : inc.period_months === 12
+          ? 'Yearly'
+          : `Every ${inc.period_months} mo`;
+        const monthlyAmt = isOneTime ? 0 : Number(inc.monthly_equivalent || (inc.amount / (inc.period_months || 1)));
 
         return (
           <div key={inc.id} className="item-row">
@@ -38,19 +52,28 @@ export function IncomeList({ incomes, onEdit, onDelete, loading }) {
                 <ArrowUpRight size={20} />
               </div>
               <div className="row-details">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                   <span className="row-title">{inc.category_name || 'Income Stream'}</span>
-                  <span style={{ fontSize: '0.7rem', background: 'var(--success-bg)', color: 'var(--success-text)', padding: '0.1rem 0.45rem', borderRadius: '0.25rem', fontWeight: 700 }}>
+                  <span
+                    style={{
+                      fontSize: '0.7rem',
+                      background: isOneTime ? 'rgba(59, 130, 246, 0.15)' : 'var(--success-bg)',
+                      color: isOneTime ? '#3b82f6' : 'var(--success-text)',
+                      padding: '0.1rem 0.45rem',
+                      borderRadius: '0.25rem',
+                      fontWeight: 700
+                    }}
+                  >
                     {periodText}
                   </span>
-                  {!inc.is_active && (
+                  {!inc.is_active && !isOneTime && (
                     <span style={{ fontSize: '0.7rem', background: 'var(--bg-subtle)', color: 'var(--text-muted)', padding: '0.1rem 0.4rem', borderRadius: '0.25rem' }}>
                       Inactive
                     </span>
                   )}
                 </div>
                 <div className="row-subtitle">
-                  <span>Started {inc.start_date}</span>
+                  <span>{isOneTime ? `Received ${inc.start_date}` : `Started ${inc.start_date}`}</span>
                   {inc.note && <span>• {inc.note}</span>}
                 </div>
               </div>
@@ -62,7 +85,7 @@ export function IncomeList({ incomes, onEdit, onDelete, loading }) {
                   +${Number(inc.amount).toFixed(2)}
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                  ≈ ${monthlyAmt.toFixed(2)}/mo
+                  {isOneTime ? 'One-time inflow' : `≈ $${monthlyAmt.toFixed(2)}/mo`}
                 </div>
               </div>
 

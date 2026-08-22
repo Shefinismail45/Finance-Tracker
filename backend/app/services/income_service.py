@@ -45,8 +45,8 @@ def create_income(
     if amount <= Decimal("0"):
         raise IncomeValidationError("Income amount must be greater than zero.")
 
-    if period_months < 1:
-        raise IncomeValidationError("Period in months must be at least 1.")
+    if period_months < 0:
+        raise IncomeValidationError("Period in months must be at least 0.")
 
     if end_date and end_date < start_date:
         raise IncomeValidationError("End date cannot be earlier than start date.")
@@ -157,8 +157,8 @@ def update_income(income_id: int, user_id: int, **kwargs) -> Income:
 
     if "period_months" in kwargs:
         pm = int(kwargs["period_months"])
-        if pm < 1:
-            raise IncomeValidationError("Period in months must be at least 1.")
+        if pm < 0:
+            raise IncomeValidationError("Period in months must be at least 0.")
         income.period_months = pm
 
     if "category_id" in kwargs:

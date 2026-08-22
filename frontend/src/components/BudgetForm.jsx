@@ -4,7 +4,11 @@ import { X } from 'lucide-react';
 export function BudgetForm({ categories, initialData, onSubmit, onClose, submitting }) {
   const [categoryId, setCategoryId] = useState(initialData?.category_id || categories[0]?.id || '');
   const [plannedAmount, setPlannedAmount] = useState(initialData?.planned_amount ? String(initialData.planned_amount) : '');
-  const [periodMonths, setPeriodMonths] = useState(initialData?.period_months ? String(initialData.period_months) : '1');
+  const [periodMonths, setPeriodMonths] = useState(
+    initialData?.period_months !== undefined && initialData?.period_months !== null
+      ? String(initialData.period_months)
+      : '1'
+  );
   const [currency, setCurrency] = useState(initialData?.currency || 'USD');
   const [error, setError] = useState('');
 
@@ -105,17 +109,23 @@ export function BudgetForm({ categories, initialData, onSubmit, onClose, submitt
           </div>
 
           <div className="form-group">
-            <label>Budget Period</label>
+            <label>Budget Period / Frequency</label>
             <select
               className="form-control"
               value={periodMonths}
               onChange={(e) => setPeriodMonths(e.target.value)}
             >
+              <option value="0">⚡ One-Time / Fixed Project Cap (Not Frequent)</option>
               <option value="1">Monthly Cap</option>
               <option value="3">Quarterly Cap (3 Months)</option>
               <option value="6">Half-Yearly Cap (6 Months)</option>
               <option value="12">Annual Cap (12 Months)</option>
             </select>
+            {periodMonths === '0' && (
+              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem', fontStyle: 'italic' }}>
+                💡 One-time spending cap for a specific project or event (e.g. Renovation, Wedding, Vacation).
+              </div>
+            )}
           </div>
 
           <button type="submit" className="btn-primary" disabled={submitting}>

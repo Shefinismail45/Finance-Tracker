@@ -9,7 +9,11 @@ export function IncomeForm({ categories, initialData, onSubmit, onClose, submitt
 
   const [amount, setAmount] = useState(initialData?.amount ? String(initialData.amount) : '');
   const [currency, setCurrency] = useState(initialData?.currency || 'USD');
-  const [periodMonths, setPeriodMonths] = useState(initialData?.period_months ? String(initialData.period_months) : '1');
+  const [periodMonths, setPeriodMonths] = useState(
+    initialData?.period_months !== undefined && initialData?.period_months !== null
+      ? String(initialData.period_months)
+      : '1'
+  );
   const [startDate, setStartDate] = useState(
     initialData?.start_date || new Date().toISOString().slice(0, 10)
   );
@@ -46,8 +50,8 @@ export function IncomeForm({ categories, initialData, onSubmit, onClose, submitt
     }
 
     const numPeriod = parseInt(periodMonths);
-    if (isNaN(numPeriod) || numPeriod < 1) {
-      setError('Period in months must be at least 1.');
+    if (isNaN(numPeriod) || numPeriod < 0) {
+      setError('Please select a valid payment frequency.');
       return;
     }
 
@@ -188,14 +192,28 @@ export function IncomeForm({ categories, initialData, onSubmit, onClose, submitt
             <select
               className="form-control"
               value={periodMonths}
-              onChange={(e) => setPeriodMonths(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setPeriodMonths(val);
+                if (val === '0') {
+                  setIsActive(false);
+                } else if (!isActive) {
+                  setIsActive(true);
+                }
+              }}
             >
+              <option value="0">⚡ One-Time / Lump Sum (Not Frequent / One-off)</option>
               <option value="1">Monthly (Every month)</option>
+              <option value="2">Bi-Monthly (Every 2 months)</option>
               <option value="3">Quarterly (Every 3 months)</option>
               <option value="6">Half-Yearly (Every 6 months)</option>
               <option value="12">Yearly (Annual lump sum)</option>
-              <option value="2">Bi-Monthly (Every 2 months)</option>
             </select>
+            {periodMonths === '0' && (
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.35rem', fontStyle: 'italic' }}>
+                💡 One-time income inflow (e.g. bonus, freelance payout, gift, asset sale). This is recorded as a single event and will not be counted in ongoing monthly recurring projections.
+              </div>
+            )}
           </div>
 
           <div className="form-row">

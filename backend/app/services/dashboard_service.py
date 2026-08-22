@@ -100,6 +100,7 @@ def get_cash_flow_forecast(user_id: int, days: int = 30) -> dict:
     daily_inflow = sum(
         float(inc.converted_amount if inc.converted_amount is not None else inc.amount) / (inc.period_months * DAYS_PER_MONTH)
         for inc in active_incomes
+        if inc.period_months > 0
     )
     projected_inflows = round(daily_inflow * days, 2)
 
@@ -122,6 +123,7 @@ def get_cash_flow_forecast(user_id: int, days: int = 30) -> dict:
 
     daily_savings_commitment = sum(
         float(g.contribution_amount) / (g.period_months * DAYS_PER_MONTH) for g in active_savings
+        if g.period_months > 0
     )
 
     projected_outflows = round((daily_recurring_expense + daily_savings_commitment) * days, 2)

@@ -29,8 +29,8 @@ def create_savings_goal(
     if contribution_amount <= Decimal("0"):
         raise SavingsValidationError("Planned contribution amount must be greater than zero.")
 
-    if period_months < 1:
-        raise SavingsValidationError("Period in months must be at least 1.")
+    if period_months < 0:
+        raise SavingsValidationError("Period in months must be at least 0.")
 
     if target_amount is not None and target_amount <= Decimal("0"):
         raise SavingsValidationError("Target amount, if provided, must be greater than zero.")
@@ -182,8 +182,8 @@ def update_savings_goal(goal_id: int, user_id: int, **kwargs) -> SavingsGoal:
 
     if "period_months" in kwargs:
         pm = int(kwargs["period_months"])
-        if pm < 1:
-            raise SavingsValidationError("Period in months must be at least 1.")
+        if pm < 0:
+            raise SavingsValidationError("Period in months must be at least 0.")
         goal.period_months = pm
 
     if "target_amount" in kwargs:

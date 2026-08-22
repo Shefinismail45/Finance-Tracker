@@ -187,17 +187,61 @@ export function ExpenseForm({ categories, initialData, onSubmit, onClose, submit
             />
           </div>
 
-          <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginTop: '1rem', marginBottom: '1.5rem' }}>
-            <input
-              type="checkbox"
-              id="is_recurring"
-              checked={isRecurring}
-              onChange={(e) => setIsRecurring(e.target.checked)}
-              style={{ width: '1.15rem', height: '1.15rem', cursor: 'pointer' }}
-            />
-            <label htmlFor="is_recurring" style={{ marginBottom: 0, cursor: 'pointer', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-              Mark as recurring fixed expense (rent, subscription, insurance)
-            </label>
+          <div className="form-group" style={{ marginTop: '1rem', marginBottom: '1.5rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem' }}>Expense Frequency</label>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <button
+                type="button"
+                onClick={() => setIsRecurring(false)}
+                style={{
+                  padding: '0.625rem 0.75rem',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  borderRadius: '0.5rem',
+                  border: !isRecurring ? '2px solid var(--primary)' : '1px solid var(--border)',
+                  background: !isRecurring ? 'rgba(99, 102, 241, 0.12)' : 'var(--bg-subtle)',
+                  color: !isRecurring ? 'var(--primary)' : 'var(--text-secondary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.4rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <span>⚡</span> One-Time (Not Frequent)
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsRecurring(true)}
+                style={{
+                  padding: '0.625rem 0.75rem',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  borderRadius: '0.5rem',
+                  border: isRecurring ? '2px solid var(--primary)' : '1px solid var(--border)',
+                  background: isRecurring ? 'rgba(99, 102, 241, 0.12)' : 'var(--bg-subtle)',
+                  color: isRecurring ? 'var(--primary)' : 'var(--text-secondary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.4rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <span>🔄</span> Recurring Fixed
+              </button>
+            </div>
+            {isRecurring ? (
+              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.4rem', fontStyle: 'italic' }}>
+                💡 Recurring fixed expense (rent, subscriptions, insurance). Factored into regular monthly cashflow projections.
+              </div>
+            ) : (
+              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.4rem', fontStyle: 'italic' }}>
+                💡 One-time purchase or single transaction (groceries, dining, shopping, repairs).
+              </div>
+            )}
           </div>
 
           <button type="submit" className="btn-primary" disabled={submitting}>

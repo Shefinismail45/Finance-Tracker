@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS public.incomes (
     currency VARCHAR(3) NOT NULL DEFAULT 'USD',
     converted_amount NUMERIC(14, 2),
     exchange_rate NUMERIC(14, 6) DEFAULT 1.0,
-    period_months INTEGER NOT NULL DEFAULT 1 CHECK (period_months >= 1),
+    period_months INTEGER NOT NULL DEFAULT 1 CHECK (period_months >= 0),
     start_date DATE NOT NULL,
     end_date DATE,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
@@ -148,7 +148,7 @@ CREATE TABLE IF NOT EXISTS public.savings_goals (
     custom_category VARCHAR(100),
     currency VARCHAR(3) NOT NULL DEFAULT 'USD',
     contribution_amount NUMERIC(12, 2) NOT NULL CHECK (contribution_amount > 0),
-    period_months INTEGER NOT NULL DEFAULT 1 CHECK (period_months >= 1),
+    period_months INTEGER NOT NULL DEFAULT 1 CHECK (period_months >= 0),
     start_date DATE NOT NULL,
     end_date DATE,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
@@ -193,7 +193,7 @@ CREATE TABLE IF NOT EXISTS public.budgets (
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     category_id UUID NOT NULL REFERENCES public.categories(id) ON DELETE CASCADE,
     planned_amount NUMERIC(12, 2) NOT NULL CHECK (planned_amount > 0),
-    period_months INTEGER NOT NULL DEFAULT 1 CHECK (period_months >= 1),
+    period_months INTEGER NOT NULL DEFAULT 1 CHECK (period_months >= 0),
     currency VARCHAR(3) NOT NULL DEFAULT 'USD',
     start_date DATE NOT NULL DEFAULT CURRENT_DATE,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
@@ -251,7 +251,10 @@ SELECT
     g.currency,
     g.contribution_amount,
     g.period_months,
-    ROUND(g.contribution_amount / g.period_months, 2) AS monthly_planned_contribution,
+    CASE 
+        WHEN g.period_months = 0 THEN 0.00
+        ELSE ROUND(g.contribution_amount / g.period_months, 2)
+    END AS monthly_planned_contribution,
     g.start_date,
     g.end_date,
     g.is_active,
@@ -280,9 +283,14 @@ SELECT
     i.amount,
     i.currency,
     i.period_months,
-    ROUND(i.amount / i.period_months, 2) AS monthly_equivalent,
     CASE 
+        WHEN i.period_months = 0 THEN 0.00
+        ELSE ROUND(i.amount / i.period_months, 2)
+    END AS monthly_equivalent,
+    CASE 
+        WHEN i.period_months = 0 THEN 'One-Time'
         WHEN i.period_months = 1 THEN 'Monthly'
+        WHEN i.period_months = 2 THEN 'Bi-Monthly'
         WHEN i.period_months = 3 THEN 'Quarterly'
         WHEN i.period_months = 6 THEN 'Half-yearly'
         WHEN i.period_months = 12 THEN 'Yearly'

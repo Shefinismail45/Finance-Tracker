@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { api } from '../api';
 import { getCurrencySymbol } from '../currencies';
+import { DashboardSkeleton } from './Skeleton';
 
 export function DashboardView({ onNavigate, onOpenForm, currency = 'USD' }) {
   const [forecastDays, setForecastDays] = useState(30);
@@ -39,7 +40,7 @@ export function DashboardView({ onNavigate, onOpenForm, currency = 'USD' }) {
   }, [forecastDays]);
 
   if (loading) {
-    return <div style={{ textAlign: 'center', padding: '4rem 1rem', color: 'var(--text-muted)' }}>Loading executive dashboard...</div>;
+    return <DashboardSkeleton />;
   }
 
   if (error) {

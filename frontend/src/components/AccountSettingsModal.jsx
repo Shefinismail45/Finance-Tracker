@@ -102,7 +102,7 @@ export function AccountSettingsModal({ user, onClose, onLogout, onDataReset }) {
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose} style={{ zIndex: 110 }}>
+    <div className="modal-overlay" onClick={onClose} style={{ zIndex: 110 }}>
       <div 
         className="modal-card" 
         onClick={(e) => e.stopPropagation()}

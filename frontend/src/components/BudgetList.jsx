@@ -1,10 +1,11 @@
 import React from 'react';
 import { Trash2, Edit3, AlertTriangle, PieChart, Sparkles } from 'lucide-react';
 import { getRandomQuote } from '../quotes';
+import { BudgetSkeleton } from './Skeleton';
 
 export function BudgetList({ budgets, onEdit, onDelete, loading }) {
   if (loading) {
-    return <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>Loading budget plans...</div>;
+    return <BudgetSkeleton count={3} />;
   }
 
   const quote = getRandomQuote(4);
@@ -62,7 +63,7 @@ export function BudgetList({ budgets, onEdit, onDelete, loading }) {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                       <span style={{ fontSize: '1.1rem', fontWeight: 800 }}>{b.category_name}</span>
                       <span style={{ fontSize: '0.72rem', background: 'var(--bg-subtle)', color: 'var(--text-secondary)', padding: '0.15rem 0.45rem', borderRadius: '0.25rem', fontWeight: 600 }}>
-                        {b.period_months === 1 ? 'Monthly' : `Every ${b.period_months} mo`}
+                        {Number(b.period_months) === 0 ? 'One-Time Cap' : b.period_months === 1 ? 'Monthly' : `Every ${b.period_months} mo`}
                       </span>
                       {isOver && (
                         <span style={{ fontSize: '0.72rem', background: 'var(--danger-bg)', color: 'var(--danger-text)', padding: '0.15rem 0.5rem', borderRadius: '0.375rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 2 }}>

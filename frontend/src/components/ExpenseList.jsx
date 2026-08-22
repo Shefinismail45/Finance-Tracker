@@ -1,10 +1,11 @@
 import React from 'react';
 import { Trash2, Edit3, Repeat, ArrowDownRight, Tag, Quote } from 'lucide-react';
 import { getRandomQuote } from '../quotes';
+import { ListSkeleton } from './Skeleton';
 
 export function ExpenseList({ expenses, onEdit, onDelete, loading }) {
   if (loading) {
-    return <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>Loading expense transactions...</div>;
+    return <ListSkeleton count={4} />;
   }
 
   const quote = getRandomQuote(1);

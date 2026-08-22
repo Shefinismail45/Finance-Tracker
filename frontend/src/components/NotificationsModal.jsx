@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Bell, X, AlertTriangle, CheckCircle, TrendingUp, PiggyBank, CreditCard, ShieldAlert } from 'lucide-react';
 import { api } from '../api';
 import { getCurrencySymbol } from '../currencies';
+import { ModalListSkeleton } from './Skeleton';
 
 export function NotificationsModal({ onClose, onNavigate, currency = 'USD' }) {
   const [notifications, setNotifications] = useState([]);
@@ -107,7 +108,7 @@ export function NotificationsModal({ onClose, onNavigate, currency = 'USD' }) {
   }, [currency]);
 
   return (
-    <div className="modal-backdrop" onClick={onClose} style={{ zIndex: 100 }}>
+    <div className="modal-overlay" onClick={onClose} style={{ zIndex: 100 }}>
       <div 
         className="modal-card" 
         onClick={(e) => e.stopPropagation()}
@@ -127,9 +128,7 @@ export function NotificationsModal({ onClose, onNavigate, currency = 'USD' }) {
         {/* List */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '0.85rem 0', display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
-              Checking active financial alerts...
-            </div>
+            <ModalListSkeleton count={3} />
           ) : (
             notifications.map(n => {
               const Icon = n.icon;

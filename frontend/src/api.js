@@ -436,7 +436,8 @@ export const api = {
   getIncomeSummary: async () => {
     const incomes = await api.getIncomes();
     const activeIncomes = incomes.filter(i => i.is_active);
-    const totalMonthly = activeIncomes.reduce((acc, i) => acc + (Number(i.amount) / (Number(i.period_months) || 1)), 0);
+    const recurringActive = activeIncomes.filter(i => Number(i.period_months) > 0);
+    const totalMonthly = recurringActive.reduce((acc, i) => acc + (Number(i.amount) / (Number(i.period_months) || 1)), 0);
     return {
       total_monthly_income: Math.round(totalMonthly * 100) / 100,
       active_streams_count: activeIncomes.length
@@ -445,13 +446,16 @@ export const api = {
 
   createIncome: async (payload) => {
     const userId = await getActiveUserId();
+    const periodMonths = payload.period_months !== undefined && payload.period_months !== null ? Number(payload.period_months) : 1;
+    const isOneTime = periodMonths === 0;
+
     if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       const { data, error } = await supabase.from('incomes').insert([{
         user_id: userId,
         category_id: payload.category_id,
         amount: payload.amount,
         currency: payload.currency || 'USD',
-        period_months: payload.period_months,
+        period_months: periodMonths,
         start_date: payload.start_date,
         end_date: payload.end_date || null,
         is_active: payload.is_active ?? true,
@@ -463,8 +467,19 @@ export const api = {
       const list = getLocalStore('incomes', []);
       const cats = getLocalStore('categories', DEFAULT_CATEGORIES);
       const cat = cats.find(c => String(c.id) === String(payload.category_id));
-      const periodMonths = Number(payload.period_months) || 1;
-      const periodLabel = periodMonths === 1 ? 'Monthly' : periodMonths === 3 ? 'Quarterly' : periodMonths === 12 ? 'Yearly' : `Every ${periodMonths} mo`;
+      const periodLabel = isOneTime
+        ? 'One-Time'
+        : periodMonths === 1
+        ? 'Monthly'
+        : periodMonths === 2
+        ? 'Bi-Monthly'
+        : periodMonths === 3
+        ? 'Quarterly'
+        : periodMonths === 6
+        ? 'Half-Yearly'
+        : periodMonths === 12
+        ? 'Yearly'
+        : `Every ${periodMonths} mo`;
       const newInc = {
         id: '00000000-0000-0000-0004-' + Math.random().toString(36).substring(2, 14).padEnd(12, '0'),
         user_id: userId,
@@ -474,7 +489,7 @@ export const api = {
         currency: payload.currency || 'USD',
         period_months: periodMonths,
         period_label: periodLabel,
-        monthly_equivalent: Math.round((Number(payload.amount) / periodMonths) * 100) / 100,
+        monthly_equivalent: isOneTime ? 0 : Math.round((Number(payload.amount) / periodMonths) * 100) / 100,
         start_date: payload.start_date,
         end_date: payload.end_date || null,
         is_active: payload.is_active ?? true,
@@ -500,12 +515,30 @@ export const api = {
       const list = getLocalStore('incomes', []);
       const idx = list.findIndex(i => String(i.id) === String(id));
       if (idx !== -1) {
-        const periodMonths = Number(payload.period_months || list[idx].period_months) || 1;
+        const periodMonths = payload.period_months !== undefined && payload.period_months !== null
+          ? Number(payload.period_months)
+          : Number(list[idx].period_months || 1);
         const amount = Number(payload.amount !== undefined ? payload.amount : list[idx].amount);
+        const isOneTime = periodMonths === 0;
+        const periodLabel = isOneTime
+          ? 'One-Time'
+          : periodMonths === 1
+          ? 'Monthly'
+          : periodMonths === 2
+          ? 'Bi-Monthly'
+          : periodMonths === 3
+          ? 'Quarterly'
+          : periodMonths === 6
+          ? 'Half-Yearly'
+          : periodMonths === 12
+          ? 'Yearly'
+          : `Every ${periodMonths} mo`;
         list[idx] = {
           ...list[idx],
           ...payload,
-          monthly_equivalent: Math.round((amount / periodMonths) * 100) / 100
+          period_months: periodMonths,
+          period_label: periodLabel,
+          monthly_equivalent: isOneTime ? 0 : Math.round((amount / periodMonths) * 100) / 100
         };
         setLocalStore('incomes', list);
         return list[idx];
@@ -747,7 +780,8 @@ export const api = {
   getSavingsSummary: async () => {
     const goals = await api.getSavingsGoals();
     const totalSaved = goals.reduce((acc, g) => acc + Number(g.total_saved || 0), 0);
-    const totalPlannedMonthly = goals.filter(g => g.is_active).reduce((acc, g) => acc + Number(g.monthly_planned_contribution || (g.contribution_amount / (g.period_months || 1))), 0);
+    const recurringActive = goals.filter(g => g.is_active && Number(g.period_months) > 0);
+    const totalPlannedMonthly = recurringActive.reduce((acc, g) => acc + Number(g.monthly_planned_contribution || (g.contribution_amount / (g.period_months || 1))), 0);
     const targetReached = goals.filter(g => g.target_amount && Number(g.total_saved) >= Number(g.target_amount)).length;
     return {
       total_saved: Math.round(totalSaved * 100) / 100,
@@ -759,6 +793,9 @@ export const api = {
 
   createSavingsGoal: async (payload) => {
     const userId = await getActiveUserId();
+    const periodMonths = payload.period_months !== undefined && payload.period_months !== null ? Number(payload.period_months) : 1;
+    const isOneTime = periodMonths === 0;
+
     if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       const { data, error } = await supabase.from('savings_goals').insert([{
         user_id: userId,
@@ -767,7 +804,7 @@ export const api = {
         custom_category: payload.custom_category || null,
         currency: payload.currency || 'USD',
         contribution_amount: payload.contribution_amount,
-        period_months: payload.period_months || 1,
+        period_months: periodMonths,
         start_date: payload.start_date,
         end_date: payload.end_date || null,
         is_active: payload.is_active ?? true,
@@ -777,7 +814,6 @@ export const api = {
       return data;
     } else {
       const list = getLocalStore('savings_goals', []);
-      const periodMonths = Number(payload.period_months) || 1;
       const planned = Number(payload.contribution_amount);
       const target = payload.target_amount ? Number(payload.target_amount) : null;
       const newGoal = {
@@ -789,7 +825,7 @@ export const api = {
         currency: payload.currency || 'USD',
         contribution_amount: planned,
         period_months: periodMonths,
-        monthly_planned_contribution: Math.round((planned / periodMonths) * 100) / 100,
+        monthly_planned_contribution: isOneTime ? 0 : Math.round((planned / periodMonths) * 100) / 100,
         start_date: payload.start_date,
         end_date: payload.end_date || null,
         is_active: payload.is_active ?? true,
@@ -818,7 +854,17 @@ export const api = {
       const list = getLocalStore('savings_goals', []);
       const idx = list.findIndex(g => String(g.id) === String(id));
       if (idx !== -1) {
-        list[idx] = { ...list[idx], ...payload };
+        const periodMonths = payload.period_months !== undefined && payload.period_months !== null
+          ? Number(payload.period_months)
+          : Number(list[idx].period_months || 1);
+        const planned = Number(payload.contribution_amount !== undefined ? payload.contribution_amount : list[idx].contribution_amount);
+        const isOneTime = periodMonths === 0;
+        list[idx] = {
+          ...list[idx],
+          ...payload,
+          period_months: periodMonths,
+          monthly_planned_contribution: isOneTime ? 0 : Math.round((planned / periodMonths) * 100) / 100
+        };
         if (list[idx].target_amount) {
           list[idx].progress_percent = Math.min(100, Math.round((list[idx].total_saved / list[idx].target_amount) * 1000) / 10);
         }
@@ -973,12 +1019,14 @@ export const api = {
 
   saveBudget: async (payload) => {
     const userId = await getActiveUserId();
+    const periodMonths = payload.period_months !== undefined && payload.period_months !== null ? Number(payload.period_months) : 1;
+
     if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       const { data, error } = await supabase.from('budgets').upsert([{
         user_id: userId,
         category_id: payload.category_id,
         planned_amount: payload.planned_amount,
-        period_months: payload.period_months || 1,
+        period_months: periodMonths,
         currency: payload.currency || 'USD',
         start_date: payload.start_date || new Date().toISOString().slice(0, 10),
         is_active: true
@@ -996,8 +1044,8 @@ export const api = {
         category_id: payload.category_id,
         category_name: cat ? cat.name : 'Category',
         planned_amount: Number(payload.planned_amount),
-        period_months: Number(payload.period_months || 1),
-        period_label: Number(payload.period_months) === 1 ? 'Monthly' : `Every ${payload.period_months} mo`,
+        period_months: periodMonths,
+        period_label: periodMonths === 0 ? 'One-Time Cap' : periodMonths === 1 ? 'Monthly' : `Every ${periodMonths} mo`,
         currency: payload.currency || 'USD',
         start_date: payload.start_date || new Date().toISOString().slice(0, 10),
         is_active: true
