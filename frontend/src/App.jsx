@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, AlertTriangle } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { api } from './api';
 import { supabase } from './supabaseClient';
+import { LoginPage } from './components/LoginPage';
 import { SidebarNav } from './components/SidebarNav';
 import { TopNavbar } from './components/TopNavbar';
 import { BottomNav } from './components/BottomNav';
-import { AuthModal } from './components/AuthModal';
 import { DashboardView } from './components/DashboardView';
 import { CategoryTotals } from './components/CategoryTotals';
 import { ExpenseList } from './components/ExpenseList';
@@ -28,7 +28,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'expense' | 'income' | 'debt' | 'savings' | 'budget'
   const [theme, setTheme] = useState(() => localStorage.getItem('pft_theme') || 'dark');
   const [user, setUser] = useState(null);
-  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [authChecking, setAuthChecking] = useState(true);
 
   // Expense State
   const [expenseCategories, setExpenseCategories] = useState([]);
@@ -55,9 +55,8 @@ export default function App() {
 
   // Budget State
   const [budgets, setBudgets] = useState([]);
-  const [budgetWarningPopup, setBudgetWarningPopup] = useState(null);
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
@@ -73,14 +72,35 @@ export default function App() {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   };
 
-  // Auth state listener
+  // Auth State Detection on Mount
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (data?.user) setUser(data.user);
-    });
+    const checkSession = async () => {
+      try {
+        const { data } = await supabase.auth.getUser();
+        if (data?.user) {
+          setUser(data.user);
+        } else {
+          // Check local demo storage
+          const stored = localStorage.getItem('pft_demo_user');
+          if (stored) {
+            try {
+              setUser(JSON.parse(stored));
+            } catch (e) {}
+          }
+        }
+      } catch (err) {
+        console.error('Session check error:', err);
+      } finally {
+        setAuthChecking(false);
+      }
+    };
+
+    checkSession();
 
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user || null);
+      if (session?.user) {
+        setUser(session.user);
+      }
     });
 
     return () => {
@@ -89,13 +109,17 @@ export default function App() {
   }, []);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (e) {}
+    localStorage.removeItem('pft_demo_user');
     setUser(null);
-    loadData();
   };
 
-  // Load data for active tab
+  // Load data for active tab when user is present
   const loadData = useCallback(async () => {
+    if (!user) return;
+
     try {
       setLoading(true);
       setError(null);
@@ -149,8 +173,10 @@ export default function App() {
   }, [activeTab, selectedExpenseCatId, selectedIncomeCatId, debtFilter, user]);
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    if (user) {
+      loadData();
+    }
+  }, [loadData, user]);
 
   // Form Submit Handlers
   const handleExpenseSubmit = async (formData) => {
@@ -290,6 +316,21 @@ export default function App() {
     }
   };
 
+  // 1. Initial Session Loading Screen
+  if (authChecking) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-page)', color: 'var(--text-muted)', fontSize: '0.95rem' }}>
+        Authenticating session...
+      </div>
+    );
+  }
+
+  // 2. FIRST PAGE: Dedicated Login / Auth Page if not authenticated
+  if (!user) {
+    return <LoginPage onAuthSuccess={(userObj) => setUser(userObj)} />;
+  }
+
+  // 3. MAIN DASHBOARD APPLICATION
   return (
     <div className="app-layout">
       {/* Desktop Persistent Left Sidebar */}
@@ -300,7 +341,7 @@ export default function App() {
         onToggleTheme={toggleTheme}
         user={user}
         onLogout={handleLogout}
-        onOpenAuth={() => setIsAuthOpen(true)}
+        onOpenAuth={() => {}}
       />
 
       {/* Main Content Wrapper */}
@@ -311,7 +352,7 @@ export default function App() {
           theme={theme}
           onToggleTheme={toggleTheme}
           onOpenForm={() => { setEditingItem(null); setIsFormOpen(true); }}
-          onOpenAuth={() => setIsAuthOpen(true)}
+          onOpenAuth={handleLogout}
         />
 
         <main className="content-body">
@@ -486,16 +527,6 @@ export default function App() {
           onContributionChange={loadData}
         />
       )}
-
-      {/* Auth Modal */}
-      <AuthModal
-        isOpen={isAuthOpen}
-        onClose={() => setIsAuthOpen(false)}
-        onAuthSuccess={(userObj) => {
-          setUser(userObj);
-          loadData();
-        }}
-      />
     </div>
   );
 }

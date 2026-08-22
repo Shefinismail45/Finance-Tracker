@@ -1,32 +1,52 @@
 import { supabase, isLiveSupabaseConfigured } from './supabaseClient';
 
+// Helper to determine if current session is a local demo user
+export function isDemoSession(userId) {
+  return !userId || userId.startsWith('00000000-') || userId === 'demo-user-12345';
+}
+
 // Helper to get active user ID
 export async function getActiveUserId() {
-  const { data } = await supabase.auth.getUser();
-  return data?.user?.id || 'demo-user-12345';
+  try {
+    const { data } = await supabase.auth.getUser();
+    if (data?.user?.id) return data.user.id;
+  } catch (e) {
+    console.warn('Error fetching auth user:', e);
+  }
+  
+  const demoUser = localStorage.getItem('pft_demo_user');
+  if (demoUser) {
+    try {
+      const parsed = JSON.parse(demoUser);
+      return parsed.id || '00000000-0000-0000-0000-000000000001';
+    } catch (e) {}
+  }
+  return null;
 }
 
 // Default Seed Categories for local fallback
 const DEFAULT_CATEGORIES = [
   // Expense Categories
-  { id: 'cat-exp-1', user_id: null, kind: 'expense', name: 'Housing & Rent', icon: 'home', is_system_default: true },
-  { id: 'cat-exp-2', user_id: null, kind: 'expense', name: 'Groceries & Food', icon: 'shopping-cart', is_system_default: true },
-  { id: 'cat-exp-3', user_id: null, kind: 'expense', name: 'Utilities & Bills', icon: 'zap', is_system_default: true },
-  { id: 'cat-exp-4', user_id: null, kind: 'expense', name: 'Transportation', icon: 'car', is_system_default: true },
-  { id: 'cat-exp-5', user_id: null, kind: 'expense', name: 'Dining & Entertainment', icon: 'coffee', is_system_default: true },
-  { id: 'cat-exp-6', user_id: null, kind: 'expense', name: 'Healthcare & Medical', icon: 'activity', is_system_default: true },
-  { id: 'cat-exp-7', user_id: null, kind: 'expense', name: 'Shopping & Personal', icon: 'shopping-bag', is_system_default: true },
-  { id: 'cat-exp-8', user_id: null, kind: 'expense', name: 'Education & Learning', icon: 'book-open', is_system_default: true },
-  { id: 'cat-exp-9', user_id: null, kind: 'expense', name: 'Travel & Vacation', icon: 'plane', is_system_default: true },
-  { id: 'cat-exp-10', user_id: null, kind: 'expense', name: 'Other Expense', icon: 'more-horizontal', is_system_default: true },
+  { id: '00000000-0000-0000-0001-000000000001', user_id: null, kind: 'expense', name: 'Housing & Rent', icon: 'home', is_system_default: true },
+  { id: '00000000-0000-0000-0001-000000000002', user_id: null, kind: 'expense', name: 'Groceries & Food', icon: 'shopping-cart', is_system_default: true },
+  { id: '00000000-0000-0000-0001-000000000003', user_id: null, kind: 'expense', name: 'Utilities & Bills', icon: 'zap', is_system_default: true },
+  { id: '00000000-0000-0000-0001-000000000004', user_id: null, kind: 'expense', name: 'Transportation', icon: 'car', is_system_default: true },
+  { id: '00000000-0000-0000-0001-000000000005', user_id: null, kind: 'expense', name: 'Dining & Entertainment', icon: 'coffee', is_system_default: true },
+  { id: '00000000-0000-0000-0001-000000000006', user_id: null, kind: 'expense', name: 'Healthcare & Medical', icon: 'activity', is_system_default: true },
+  { id: '00000000-0000-0000-0001-000000000007', user_id: null, kind: 'expense', name: 'Shopping & Personal', icon: 'shopping-bag', is_system_default: true },
+  { id: '00000000-0000-0000-0001-000000000008', user_id: null, kind: 'expense', name: 'Education & Learning', icon: 'book-open', is_system_default: true },
+  { id: '00000000-0000-0000-0001-000000000009', user_id: null, kind: 'expense', name: 'Travel & Vacation', icon: 'plane', is_system_default: true },
+  { id: '00000000-0000-0000-0001-000000000010', user_id: null, kind: 'expense', name: 'Other Expense', icon: 'more-horizontal', is_system_default: true },
   // Income Categories
-  { id: 'cat-inc-1', user_id: null, kind: 'income', name: 'Salary & Wages', icon: 'briefcase', is_system_default: true },
-  { id: 'cat-inc-2', user_id: null, kind: 'income', name: 'Freelance & Contracting', icon: 'laptop', is_system_default: true },
-  { id: 'cat-inc-3', user_id: null, kind: 'income', name: 'Investments & Dividends', icon: 'trending-up', is_system_default: true },
-  { id: 'cat-inc-4', user_id: null, kind: 'income', name: 'Rental Income', icon: 'key', is_system_default: true },
-  { id: 'cat-inc-5', user_id: null, kind: 'income', name: 'Gifts & Grants', icon: 'gift', is_system_default: true },
-  { id: 'cat-inc-6', user_id: null, kind: 'income', name: 'Other Income', icon: 'dollar-sign', is_system_default: true },
+  { id: '00000000-0000-0000-0002-000000000001', user_id: null, kind: 'income', name: 'Salary & Wages', icon: 'briefcase', is_system_default: true },
+  { id: '00000000-0000-0000-0002-000000000002', user_id: null, kind: 'income', name: 'Freelance & Contracting', icon: 'laptop', is_system_default: true },
+  { id: '00000000-0000-0000-0002-000000000003', user_id: null, kind: 'income', name: 'Investments & Dividends', icon: 'trending-up', is_system_default: true },
+  { id: '00000000-0000-0000-0002-000000000004', user_id: null, kind: 'income', name: 'Rental Income', icon: 'key', is_system_default: true },
+  { id: '00000000-0000-0000-0002-000000000005', user_id: null, kind: 'income', name: 'Gifts & Grants', icon: 'gift', is_system_default: true },
+  { id: '00000000-0000-0000-0002-000000000006', user_id: null, kind: 'income', name: 'Other Income', icon: 'dollar-sign', is_system_default: true },
 ];
+
+const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
 
 // Initial mock data if storage is empty
 function getLocalStore(key, defaultVal) {
@@ -47,9 +67,9 @@ if (!localStorage.getItem('pft_initialized')) {
   setLocalStore('categories', DEFAULT_CATEGORIES);
   setLocalStore('expenses', [
     {
-      id: 'exp-1',
-      user_id: 'demo-user-12345',
-      category_id: 'cat-exp-1',
+      id: '00000000-0000-0000-0003-000000000001',
+      user_id: DEMO_USER_ID,
+      category_id: '00000000-0000-0000-0001-000000000001',
       category_name: 'Housing & Rent',
       amount: 1450.00,
       currency: 'USD',
@@ -58,9 +78,9 @@ if (!localStorage.getItem('pft_initialized')) {
       is_recurring: true
     },
     {
-      id: 'exp-2',
-      user_id: 'demo-user-12345',
-      category_id: 'cat-exp-2',
+      id: '00000000-0000-0000-0003-000000000002',
+      user_id: DEMO_USER_ID,
+      category_id: '00000000-0000-0000-0001-000000000002',
       category_name: 'Groceries & Food',
       amount: 142.50,
       currency: 'USD',
@@ -69,9 +89,9 @@ if (!localStorage.getItem('pft_initialized')) {
       is_recurring: false
     },
     {
-      id: 'exp-3',
-      user_id: 'demo-user-12345',
-      category_id: 'cat-exp-5',
+      id: '00000000-0000-0000-0003-000000000003',
+      user_id: DEMO_USER_ID,
+      category_id: '00000000-0000-0000-0001-000000000005',
       category_name: 'Dining & Entertainment',
       amount: 68.00,
       currency: 'USD',
@@ -82,9 +102,9 @@ if (!localStorage.getItem('pft_initialized')) {
   ]);
   setLocalStore('incomes', [
     {
-      id: 'inc-1',
-      user_id: 'demo-user-12345',
-      category_id: 'cat-inc-1',
+      id: '00000000-0000-0000-0004-000000000001',
+      user_id: DEMO_USER_ID,
+      category_id: '00000000-0000-0000-0002-000000000001',
       category_name: 'Salary & Wages',
       amount: 4800.00,
       currency: 'USD',
@@ -97,9 +117,9 @@ if (!localStorage.getItem('pft_initialized')) {
       note: 'Primary Engineering Salary'
     },
     {
-      id: 'inc-2',
-      user_id: 'demo-user-12345',
-      category_id: 'cat-inc-2',
+      id: '00000000-0000-0000-0004-000000000002',
+      user_id: DEMO_USER_ID,
+      category_id: '00000000-0000-0000-0002-000000000002',
       category_name: 'Freelance & Contracting',
       amount: 900.00,
       currency: 'USD',
@@ -114,8 +134,8 @@ if (!localStorage.getItem('pft_initialized')) {
   ]);
   setLocalStore('debts', [
     {
-      id: 'debt-1',
-      user_id: 'demo-user-12345',
+      id: '00000000-0000-0000-0005-000000000001',
+      user_id: DEMO_USER_ID,
       name: 'Chase Sapphire Reserve',
       debt_type: 'credit_card',
       custom_debt_type: null,
@@ -130,8 +150,8 @@ if (!localStorage.getItem('pft_initialized')) {
       payment_count: 2
     },
     {
-      id: 'debt-2',
-      user_id: 'demo-user-12345',
+      id: '00000000-0000-0000-0005-000000000002',
+      user_id: DEMO_USER_ID,
       name: 'Auto Loan - Toyota',
       debt_type: 'loan',
       custom_debt_type: null,
@@ -147,13 +167,13 @@ if (!localStorage.getItem('pft_initialized')) {
     }
   ]);
   setLocalStore('debt_payments', [
-    { id: 'dp-1', debt_id: 'debt-1', user_id: 'demo-user-12345', amount: 600.00, currency: 'USD', paid_date: '2026-01-15', note: 'Monthly payment' },
-    { id: 'dp-2', debt_id: 'debt-1', user_id: 'demo-user-12345', amount: 600.00, currency: 'USD', paid_date: '2026-02-15', note: 'Monthly payment' }
+    { id: '00000000-0000-0000-0006-000000000001', debt_id: '00000000-0000-0000-0005-000000000001', user_id: DEMO_USER_ID, amount: 600.00, currency: 'USD', paid_date: '2026-01-15', note: 'Monthly payment' },
+    { id: '00000000-0000-0000-0006-000000000002', debt_id: '00000000-0000-0000-0005-000000000001', user_id: DEMO_USER_ID, amount: 600.00, currency: 'USD', paid_date: '2026-02-15', note: 'Monthly payment' }
   ]);
   setLocalStore('savings_goals', [
     {
-      id: 'sav-1',
-      user_id: 'demo-user-12345',
+      id: '00000000-0000-0000-0007-000000000001',
+      user_id: DEMO_USER_ID,
       name: 'Emergency Fund (6 Months)',
       target_amount: 15000.00,
       custom_category: 'Emergency',
@@ -170,8 +190,8 @@ if (!localStorage.getItem('pft_initialized')) {
       monthly_planned_contribution: 500.00
     },
     {
-      id: 'sav-2',
-      user_id: 'demo-user-12345',
+      id: '00000000-0000-0000-0007-000000000002',
+      user_id: DEMO_USER_ID,
       name: 'Tokyo Trip Fund',
       target_amount: 4000.00,
       custom_category: 'Travel',
@@ -189,14 +209,14 @@ if (!localStorage.getItem('pft_initialized')) {
     }
   ]);
   setLocalStore('savings_contributions', [
-    { id: 'sc-1', savings_goal_id: 'sav-1', user_id: 'demo-user-12345', amount: 500.00, currency: 'USD', contributed_date: '2026-01-01', note: 'New year deposit' },
-    { id: 'sc-2', savings_goal_id: 'sav-1', user_id: 'demo-user-12345', amount: 500.00, currency: 'USD', contributed_date: '2026-02-01', note: 'Monthly auto-deposit' }
+    { id: '00000000-0000-0000-0008-000000000001', savings_goal_id: '00000000-0000-0000-0007-000000000001', user_id: DEMO_USER_ID, amount: 500.00, currency: 'USD', contributed_date: '2026-01-01', note: 'New year deposit' },
+    { id: '00000000-0000-0000-0008-000000000002', savings_goal_id: '00000000-0000-0000-0007-000000000001', user_id: DEMO_USER_ID, amount: 500.00, currency: 'USD', contributed_date: '2026-02-01', note: 'Monthly auto-deposit' }
   ]);
   setLocalStore('budgets', [
     {
-      id: 'bgt-1',
-      user_id: 'demo-user-12345',
-      category_id: 'cat-exp-2',
+      id: '00000000-0000-0000-0009-000000000001',
+      user_id: DEMO_USER_ID,
+      category_id: '00000000-0000-0000-0001-000000000002',
       category_name: 'Groceries & Food',
       planned_amount: 600.00,
       period_months: 1,
@@ -206,9 +226,9 @@ if (!localStorage.getItem('pft_initialized')) {
       is_active: true
     },
     {
-      id: 'bgt-2',
-      user_id: 'demo-user-12345',
-      category_id: 'cat-exp-5',
+      id: '00000000-0000-0000-0009-000000000002',
+      user_id: DEMO_USER_ID,
+      category_id: '00000000-0000-0000-0001-000000000005',
       category_name: 'Dining & Entertainment',
       planned_amount: 250.00,
       period_months: 1,
@@ -227,7 +247,7 @@ export const api = {
   // ==========================================
   getCategories: async (kind) => {
     const userId = await getActiveUserId();
-    if (isLiveSupabaseConfigured()) {
+    if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       let query = supabase.from('categories').select('*').or(`user_id.eq.${userId},user_id.is.null`);
       if (kind) query = query.eq('kind', kind);
       const { data, error } = await query.order('name');
@@ -241,7 +261,7 @@ export const api = {
 
   createCategory: async ({ name, kind, icon = 'tag' }) => {
     const userId = await getActiveUserId();
-    if (isLiveSupabaseConfigured()) {
+    if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       const { data, error } = await supabase.from('categories').insert([{
         user_id: userId,
         name: name.trim(),
@@ -253,7 +273,7 @@ export const api = {
     } else {
       const cats = getLocalStore('categories', DEFAULT_CATEGORIES);
       const newCat = {
-        id: 'cat-' + Math.random().toString(36).substring(2, 9),
+        id: '00000000-0000-0000-0001-' + Math.random().toString(36).substring(2, 14).padEnd(12, '0'),
         user_id: userId,
         name: name.trim(),
         kind,
@@ -271,7 +291,9 @@ export const api = {
   // ==========================================
   getExpenses: async (params = {}) => {
     const userId = await getActiveUserId();
-    if (isLiveSupabaseConfigured()) {
+    if (!userId) return [];
+
+    if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       let query = supabase.from('expenses').select('*, categories(name, icon)').eq('user_id', userId);
       if (params.category_id) query = query.eq('category_id', params.category_id);
       const { data, error } = await query.order('occurred_at', { ascending: false });
@@ -292,7 +314,9 @@ export const api = {
 
   getCategoryTotals: async () => {
     const userId = await getActiveUserId();
-    if (isLiveSupabaseConfigured()) {
+    if (!userId) return [];
+
+    if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       const { data, error } = await supabase.from('expense_category_totals_view').select('*').eq('user_id', userId);
       if (!error && data) return data;
     }
@@ -318,7 +342,7 @@ export const api = {
 
   createExpense: async (payload) => {
     const userId = await getActiveUserId();
-    if (isLiveSupabaseConfigured()) {
+    if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       const { data, error } = await supabase.from('expenses').insert([{
         user_id: userId,
         category_id: payload.category_id,
@@ -335,7 +359,7 @@ export const api = {
       const cats = getLocalStore('categories', DEFAULT_CATEGORIES);
       const cat = cats.find(c => String(c.id) === String(payload.category_id));
       const newExp = {
-        id: 'exp-' + Math.random().toString(36).substring(2, 9),
+        id: '00000000-0000-0000-0003-' + Math.random().toString(36).substring(2, 14).padEnd(12, '0'),
         user_id: userId,
         category_id: payload.category_id,
         category_name: cat ? cat.name : 'Other Expense',
@@ -353,7 +377,7 @@ export const api = {
 
   updateExpense: async (id, payload) => {
     const userId = await getActiveUserId();
-    if (isLiveSupabaseConfigured()) {
+    if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       const { data, error } = await supabase.from('expenses')
         .update(payload)
         .eq('id', id)
@@ -376,7 +400,7 @@ export const api = {
 
   deleteExpense: async (id) => {
     const userId = await getActiveUserId();
-    if (isLiveSupabaseConfigured()) {
+    if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       const { error } = await supabase.from('expenses').delete().eq('id', id).eq('user_id', userId);
       if (error) throw error;
       return true;
@@ -392,7 +416,9 @@ export const api = {
   // ==========================================
   getIncomes: async (params = {}) => {
     const userId = await getActiveUserId();
-    if (isLiveSupabaseConfigured()) {
+    if (!userId) return [];
+
+    if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       let query = supabase.from('incomes_view').select('*').eq('user_id', userId);
       if (params.category_id) query = query.eq('category_id', params.category_id);
       const { data, error } = await query.order('start_date', { ascending: false });
@@ -419,7 +445,7 @@ export const api = {
 
   createIncome: async (payload) => {
     const userId = await getActiveUserId();
-    if (isLiveSupabaseConfigured()) {
+    if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       const { data, error } = await supabase.from('incomes').insert([{
         user_id: userId,
         category_id: payload.category_id,
@@ -440,7 +466,7 @@ export const api = {
       const periodMonths = Number(payload.period_months) || 1;
       const periodLabel = periodMonths === 1 ? 'Monthly' : periodMonths === 3 ? 'Quarterly' : periodMonths === 12 ? 'Yearly' : `Every ${periodMonths} mo`;
       const newInc = {
-        id: 'inc-' + Math.random().toString(36).substring(2, 9),
+        id: '00000000-0000-0000-0004-' + Math.random().toString(36).substring(2, 14).padEnd(12, '0'),
         user_id: userId,
         category_id: payload.category_id,
         category_name: cat ? cat.name : 'Other Income',
@@ -462,7 +488,7 @@ export const api = {
 
   updateIncome: async (id, payload) => {
     const userId = await getActiveUserId();
-    if (isLiveSupabaseConfigured()) {
+    if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       const { data, error } = await supabase.from('incomes')
         .update(payload)
         .eq('id', id)
@@ -489,7 +515,7 @@ export const api = {
 
   deleteIncome: async (id) => {
     const userId = await getActiveUserId();
-    if (isLiveSupabaseConfigured()) {
+    if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       const { error } = await supabase.from('incomes').delete().eq('id', id).eq('user_id', userId);
       if (error) throw error;
       return true;
@@ -505,7 +531,9 @@ export const api = {
   // ==========================================
   getDebts: async (params = {}) => {
     const userId = await getActiveUserId();
-    if (isLiveSupabaseConfigured()) {
+    if (!userId) return [];
+
+    if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       let query = supabase.from('debts_avalanche_view').select('*').eq('user_id', userId);
       if (params.status_filter === 'active') query = query.eq('is_paid_off', false);
       if (params.status_filter === 'paid_off') query = query.eq('is_paid_off', true);
@@ -541,7 +569,7 @@ export const api = {
 
   createDebt: async (payload) => {
     const userId = await getActiveUserId();
-    if (isLiveSupabaseConfigured()) {
+    if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       const { data, error } = await supabase.from('debts').insert([{
         user_id: userId,
         name: payload.name.trim(),
@@ -558,7 +586,7 @@ export const api = {
     } else {
       const list = getLocalStore('debts', []);
       const newDebt = {
-        id: 'debt-' + Math.random().toString(36).substring(2, 9),
+        id: '00000000-0000-0000-0005-' + Math.random().toString(36).substring(2, 14).padEnd(12, '0'),
         user_id: userId,
         name: payload.name.trim(),
         debt_type: payload.debt_type,
@@ -581,7 +609,7 @@ export const api = {
 
   updateDebt: async (id, payload) => {
     const userId = await getActiveUserId();
-    if (isLiveSupabaseConfigured()) {
+    if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       const { data, error } = await supabase.from('debts')
         .update(payload)
         .eq('id', id)
@@ -604,7 +632,7 @@ export const api = {
 
   deleteDebt: async (id) => {
     const userId = await getActiveUserId();
-    if (isLiveSupabaseConfigured()) {
+    if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       const { error } = await supabase.from('debts').delete().eq('id', id).eq('user_id', userId);
       if (error) throw error;
       return true;
@@ -619,7 +647,7 @@ export const api = {
 
   recordDebtPayment: async (debtId, payload) => {
     const userId = await getActiveUserId();
-    if (isLiveSupabaseConfigured()) {
+    if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       const { data, error } = await supabase.from('debt_payments').insert([{
         debt_id: debtId,
         user_id: userId,
@@ -633,7 +661,7 @@ export const api = {
     } else {
       const payments = getLocalStore('debt_payments', []);
       const newP = {
-        id: 'dp-' + Math.random().toString(36).substring(2, 9),
+        id: '00000000-0000-0000-0006-' + Math.random().toString(36).substring(2, 14).padEnd(12, '0'),
         debt_id: debtId,
         user_id: userId,
         amount: Number(payload.amount),
@@ -660,7 +688,7 @@ export const api = {
 
   getDebtPayments: async (debtId) => {
     const userId = await getActiveUserId();
-    if (isLiveSupabaseConfigured()) {
+    if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       const { data, error } = await supabase.from('debt_payments').select('*').eq('debt_id', debtId).order('paid_date', { ascending: false });
       if (error) throw error;
       return data;
@@ -671,7 +699,7 @@ export const api = {
 
   deleteDebtPayment: async (paymentId) => {
     const userId = await getActiveUserId();
-    if (isLiveSupabaseConfigured()) {
+    if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       const { error } = await supabase.from('debt_payments').delete().eq('id', paymentId).eq('user_id', userId);
       if (error) throw error;
       return true;
@@ -701,7 +729,9 @@ export const api = {
   // ==========================================
   getSavingsGoals: async (params = {}) => {
     const userId = await getActiveUserId();
-    if (isLiveSupabaseConfigured()) {
+    if (!userId) return [];
+
+    if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       let query = supabase.from('savings_goals_view').select('*').eq('user_id', userId);
       if (params.active_only) query = query.eq('is_active', true);
       const { data, error } = await query.order('name');
@@ -729,7 +759,7 @@ export const api = {
 
   createSavingsGoal: async (payload) => {
     const userId = await getActiveUserId();
-    if (isLiveSupabaseConfigured()) {
+    if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       const { data, error } = await supabase.from('savings_goals').insert([{
         user_id: userId,
         name: payload.name.trim(),
@@ -751,7 +781,7 @@ export const api = {
       const planned = Number(payload.contribution_amount);
       const target = payload.target_amount ? Number(payload.target_amount) : null;
       const newGoal = {
-        id: 'sav-' + Math.random().toString(36).substring(2, 9),
+        id: '00000000-0000-0000-0007-' + Math.random().toString(36).substring(2, 14).padEnd(12, '0'),
         user_id: userId,
         name: payload.name.trim(),
         target_amount: target,
@@ -776,7 +806,7 @@ export const api = {
 
   updateSavingsGoal: async (id, payload) => {
     const userId = await getActiveUserId();
-    if (isLiveSupabaseConfigured()) {
+    if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       const { data, error } = await supabase.from('savings_goals')
         .update(payload)
         .eq('id', id)
@@ -800,7 +830,7 @@ export const api = {
 
   deleteSavingsGoal: async (id) => {
     const userId = await getActiveUserId();
-    if (isLiveSupabaseConfigured()) {
+    if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       const { error } = await supabase.from('savings_goals').delete().eq('id', id).eq('user_id', userId);
       if (error) throw error;
       return true;
@@ -815,7 +845,7 @@ export const api = {
 
   recordSavingsContribution: async (goalId, payload) => {
     const userId = await getActiveUserId();
-    if (isLiveSupabaseConfigured()) {
+    if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       const { data, error } = await supabase.from('savings_contributions').insert([{
         savings_goal_id: goalId,
         user_id: userId,
@@ -829,7 +859,7 @@ export const api = {
     } else {
       const contribs = getLocalStore('savings_contributions', []);
       const newC = {
-        id: 'sc-' + Math.random().toString(36).substring(2, 9),
+        id: '00000000-0000-0000-0008-' + Math.random().toString(36).substring(2, 14).padEnd(12, '0'),
         savings_goal_id: goalId,
         user_id: userId,
         amount: Number(payload.amount),
@@ -857,7 +887,7 @@ export const api = {
 
   getSavingsContributions: async (goalId) => {
     const userId = await getActiveUserId();
-    if (isLiveSupabaseConfigured()) {
+    if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       const { data, error } = await supabase.from('savings_contributions').select('*').eq('savings_goal_id', goalId).order('contributed_date', { ascending: false });
       if (error) throw error;
       return data;
@@ -868,7 +898,7 @@ export const api = {
 
   deleteSavingsContribution: async (contributionId) => {
     const userId = await getActiveUserId();
-    if (isLiveSupabaseConfigured()) {
+    if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       const { error } = await supabase.from('savings_contributions').delete().eq('id', contributionId).eq('user_id', userId);
       if (error) throw error;
       return true;
@@ -899,8 +929,10 @@ export const api = {
   // ==========================================
   getBudgets: async () => {
     const userId = await getActiveUserId();
+    if (!userId) return [];
+
     let budgets = [];
-    if (isLiveSupabaseConfigured()) {
+    if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       const { data, error } = await supabase.from('budgets').select('*, categories(name)').eq('user_id', userId);
       if (!error && data) {
         budgets = data.map(b => ({ ...b, category_name: b.categories?.name }));
@@ -941,7 +973,7 @@ export const api = {
 
   saveBudget: async (payload) => {
     const userId = await getActiveUserId();
-    if (isLiveSupabaseConfigured()) {
+    if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       const { data, error } = await supabase.from('budgets').upsert([{
         user_id: userId,
         category_id: payload.category_id,
@@ -959,7 +991,7 @@ export const api = {
       const cat = cats.find(c => String(c.id) === String(payload.category_id));
       const idx = budgets.findIndex(b => b.user_id === userId && String(b.category_id) === String(payload.category_id));
       const budgetEntry = {
-        id: idx !== -1 ? budgets[idx].id : 'bgt-' + Math.random().toString(36).substring(2, 9),
+        id: idx !== -1 ? budgets[idx].id : '00000000-0000-0000-0009-' + Math.random().toString(36).substring(2, 14).padEnd(12, '0'),
         user_id: userId,
         category_id: payload.category_id,
         category_name: cat ? cat.name : 'Category',
@@ -982,7 +1014,7 @@ export const api = {
 
   deleteBudget: async (id) => {
     const userId = await getActiveUserId();
-    if (isLiveSupabaseConfigured()) {
+    if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       const { error } = await supabase.from('budgets').delete().eq('id', id).eq('user_id', userId);
       if (error) throw error;
       return true;
