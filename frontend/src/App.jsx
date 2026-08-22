@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Wallet } from 'lucide-react';
 import { api } from './api';
 import { supabase } from './supabaseClient';
 import { LoginPage } from './components/LoginPage';
@@ -87,36 +87,54 @@ export default function App() {
 
   // Auth State Detection on Mount
   useEffect(() => {
+    let mounted = true;
+
+    // Safety timeout: Never leave the user waiting if network request hangs
+    const safetyTimer = setTimeout(() => {
+      if (mounted) {
+        setAuthChecking(false);
+      }
+    }, 600);
+
     const checkSession = async () => {
       try {
-        const { data } = await supabase.auth.getUser();
-        if (data?.user) {
-          setUser(data.user);
-        } else {
-          // Check local demo storage
-          const stored = localStorage.getItem('pft_demo_user');
-          if (stored) {
-            try {
-              setUser(JSON.parse(stored));
-            } catch (e) {}
-          }
+        // Fast local session resolution from storage
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (sessionData?.session?.user && mounted) {
+          setUser(sessionData.session.user);
+          setAuthChecking(false);
+          clearTimeout(safetyTimer);
+          return;
+        }
+
+        // Check local demo storage
+        const stored = localStorage.getItem('pft_demo_user');
+        if (stored && mounted) {
+          try {
+            setUser(JSON.parse(stored));
+          } catch (e) {}
         }
       } catch (err) {
-        console.error('Session check error:', err);
+        console.warn('Session check notice:', err);
       } finally {
-        setAuthChecking(false);
+        if (mounted) {
+          setAuthChecking(false);
+          clearTimeout(safetyTimer);
+        }
       }
     };
 
     checkSession();
 
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
+      if (session?.user && mounted) {
         setUser(session.user);
       }
     });
 
     return () => {
+      mounted = false;
+      clearTimeout(safetyTimer);
       authListener?.subscription?.unsubscribe?.();
     };
   }, []);
@@ -329,11 +347,26 @@ export default function App() {
     }
   };
 
-  // 1. Initial Session Loading Screen
+  // 1. Initial Session Loading Screen (Branded Fast Pulse)
   if (authChecking) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-page)', color: 'var(--text-muted)', fontSize: '0.95rem' }}>
-        Authenticating session...
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-page)', gap: '1.25rem' }}>
+        <div style={{
+          width: '3.75rem',
+          height: '3.75rem',
+          borderRadius: '1.25rem',
+          background: 'var(--primary-gradient)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'white',
+          boxShadow: '0 10px 28px rgba(37, 99, 235, 0.4)'
+        }}>
+          <Wallet size={28} />
+        </div>
+        <div style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
+          Loading FinanceTracker...
+        </div>
       </div>
     );
   }
