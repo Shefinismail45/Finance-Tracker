@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trash2, Edit3, Repeat, ArrowDownRight, Tag, Quote, Plus } from 'lucide-react';
+import { Trash2, Edit3, Repeat, Receipt, Tag, Quote, Plus } from 'lucide-react';
 import { getRandomQuote } from '../quotes';
 import { ListSkeleton } from './Skeleton';
 
@@ -14,7 +14,7 @@ export function ExpenseList({ expenses, onEdit, onDelete, onAddNew, loading }) {
     return (
       <div className="empty-state">
         <div style={{ width: '3.25rem', height: '3.25rem', borderRadius: '50%', background: 'var(--danger-bg)', color: 'var(--danger)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <ArrowDownRight size={26} />
+          <Receipt size={26} />
         </div>
         <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)' }}>No expenses logged yet</div>
         <div style={{ fontSize: '0.88rem', color: 'var(--text-muted)', maxWidth: '420px' }}>Record your daily expenses, bills, and purchases to track your spending habits.</div>
@@ -62,7 +62,7 @@ export function ExpenseList({ expenses, onEdit, onDelete, onAddNew, loading }) {
           <div key={exp.id} className="item-row">
             <div className="row-left">
               <div className="row-icon-circle expense">
-                <ArrowDownRight size={20} />
+                <Receipt size={20} />
               </div>
               <div className="row-details">
                 <div className="row-title">{exp.category_name}</div>

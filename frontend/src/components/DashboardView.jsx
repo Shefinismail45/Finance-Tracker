@@ -4,8 +4,8 @@ import {
   Shield, 
   CreditCard, 
   PieChart, 
-  ArrowDownRight, 
-  ArrowUpRight, 
+  Receipt, 
+  Banknote, 
   PiggyBank, 
   Sparkles
 } from 'lucide-react';
@@ -100,7 +100,7 @@ export function DashboardView({ onNavigate, onOpenForm, currency = 'USD' }) {
             onClick={() => onNavigate('expense')}
             title="Log an Expense"
           >
-            <ArrowDownRight size={18} color="#f87171" />
+            <Receipt size={18} color="#f87171" />
             <span>Expense</span>
           </button>
 
@@ -109,7 +109,7 @@ export function DashboardView({ onNavigate, onOpenForm, currency = 'USD' }) {
             onClick={() => onNavigate('income')}
             title="Add Income Stream"
           >
-            <ArrowUpRight size={18} color="#34d399" />
+            <Banknote size={18} color="#34d399" />
             <span>Income</span>
           </button>
 

@@ -1,8 +1,8 @@
 import React from 'react';
 import { 
   LayoutDashboard, 
-  ArrowDownRight, 
-  ArrowUpRight, 
+  Receipt, 
+  Banknote, 
   CreditCard, 
   PiggyBank, 
   PieChart 
@@ -11,8 +11,8 @@ import {
 export function BottomNav({ activeTab, onSelectTab }) {
   const navItems = [
     { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
-    { id: 'expense', label: 'Expenses', icon: ArrowDownRight },
-    { id: 'income', label: 'Income', icon: ArrowUpRight },
+    { id: 'expense', label: 'Expenses', icon: Receipt },
+    { id: 'income', label: 'Income', icon: Banknote },
     { id: 'debt', label: 'Debts', icon: CreditCard },
     { id: 'savings', label: 'Savings', icon: PiggyBank },
     { id: 'budget', label: 'Budgets', icon: PieChart },

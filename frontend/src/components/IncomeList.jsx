@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trash2, Edit3, ArrowUpRight, Plus } from 'lucide-react';
+import { Trash2, Edit3, Banknote, Plus } from 'lucide-react';
 import { getRandomQuote } from '../quotes';
 import { ListSkeleton } from './Skeleton';
 
@@ -14,7 +14,7 @@ export function IncomeList({ incomes, onEdit, onDelete, onAddNew, loading }) {
     return (
       <div className="empty-state">
         <div className="row-icon-circle income" style={{ width: '3.25rem', height: '3.25rem' }}>
-          <ArrowUpRight size={26} />
+          <Banknote size={26} />
         </div>
         <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)' }}>No income streams added yet</div>
         <div style={{ fontSize: '0.88rem', color: 'var(--text-muted)', maxWidth: '420px' }}>Add your salary, freelance retainers, bonus, or investment inflows.</div>
@@ -72,7 +72,7 @@ export function IncomeList({ incomes, onEdit, onDelete, onAddNew, loading }) {
           <div key={inc.id} className="item-row">
             <div className="row-left">
               <div className="row-icon-circle income">
-                <ArrowUpRight size={20} />
+                <Banknote size={20} />
               </div>
               <div className="row-details">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>

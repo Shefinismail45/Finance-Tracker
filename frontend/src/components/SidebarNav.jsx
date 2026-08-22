@@ -1,8 +1,8 @@
 import React from 'react';
 import { 
   LayoutDashboard, 
-  ArrowDownRight, 
-  ArrowUpRight, 
+  Receipt, 
+  Banknote, 
   CreditCard, 
   PiggyBank, 
   PieChart, 
@@ -28,8 +28,8 @@ export function SidebarNav({
 }) {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'expense', label: 'Expenses', icon: ArrowDownRight },
-    { id: 'income', label: 'Income', icon: ArrowUpRight },
+    { id: 'expense', label: 'Expenses', icon: Receipt },
+    { id: 'income', label: 'Income', icon: Banknote },
     { id: 'debt', label: 'Debt Avalanche', icon: CreditCard },
     { id: 'savings', label: 'Savings Goals', icon: PiggyBank },
     { id: 'budget', label: 'Budgets & Rules', icon: PieChart },

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, X, ArrowDownRight, ArrowUpRight, CreditCard, PiggyBank, Sparkles } from 'lucide-react';
+import { Search, X, Receipt, Banknote, CreditCard, PiggyBank, Sparkles } from 'lucide-react';
 import { api } from '../api';
 import { getCurrencySymbol } from '../currencies';
 import { SearchSkeleton } from './Skeleton';
@@ -172,7 +172,7 @@ export function SearchModal({ onClose, onNavigate, currency = 'USD' }) {
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
                       <div className="row-icon-circle" style={{ background: 'var(--danger-bg)', color: 'var(--danger-text)', width: '2rem', height: '2rem' }}>
-                        <ArrowDownRight size={14} />
+                        <Receipt size={14} />
                       </div>
                       <div>
                         <div style={{ fontSize: '0.85rem', fontWeight: 700 }}>{exp.category_name}</div>
@@ -215,7 +215,7 @@ export function SearchModal({ onClose, onNavigate, currency = 'USD' }) {
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
                       <div className="row-icon-circle" style={{ background: 'var(--success-bg)', color: 'var(--success-text)', width: '2rem', height: '2rem' }}>
-                        <ArrowUpRight size={14} />
+                        <Banknote size={14} />
                       </div>
                       <div>
                         <div style={{ fontSize: '0.85rem', fontWeight: 700 }}>{inc.category_name || 'Income'}</div>
