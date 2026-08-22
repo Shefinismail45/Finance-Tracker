@@ -41,8 +41,7 @@
   --nav-bg: rgba(241, 245, 249, 0.92);
   --nav-border: #dbe4ee;
   
-  --web-grid: rgba(71, 85, 105, 0.05);
-  --web-dot: rgba(71, 85, 105, 0.15);
+  --web-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cg stroke='%23334155' stroke-width='0.75' stroke-opacity='0.08' fill='none'%3E%3Cpath d='M90 0 L90 180 M0 90 L180 90 M0 0 L180 180 M180 0 L0 180' /%3E%3Cpolygon points='90,70 104,76 110,90 104,104 90,110 76,104 70,90 76,76' /%3E%3Cpolygon points='90,48 120,60 132,90 120,120 90,132 60,120 48,90 60,60' /%3E%3Cpolygon points='90,26 135,45 154,90 135,135 90,154 45,135 26,90 45,45' /%3E%3Cpolygon points='90,4 151,29 176,90 151,151 90,176 29,151 4,90 29,29' /%3E%3C/g%3E%3Ccircle cx='90' cy='90' r='1.5' fill='%232563eb' fill-opacity='0.25'/%3E%3C/svg%3E");
   --web-glow: radial-gradient(circle at 50% 0%, rgba(191, 219, 254, 0.28) 0%, transparent 60%);
 }
 
@@ -84,8 +83,7 @@
   --nav-bg: rgba(19, 27, 46, 0.92);
   --nav-border: #273757;
   
-  --web-grid: rgba(59, 130, 246, 0.09);
-  --web-dot: rgba(96, 165, 250, 0.28);
+  --web-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cg stroke='%2360a5fa' stroke-width='0.8' stroke-opacity='0.12' fill='none'%3E%3Cpath d='M90 0 L90 180 M0 90 L180 90 M0 0 L180 180 M180 0 L0 180' /%3E%3Cpolygon points='90,70 104,76 110,90 104,104 90,110 76,104 70,90 76,76' /%3E%3Cpolygon points='90,48 120,60 132,90 120,120 90,132 60,120 48,90 60,60' /%3E%3Cpolygon points='90,26 135,45 154,90 135,135 90,154 45,135 26,90 45,45' /%3E%3Cpolygon points='90,4 151,29 176,90 151,151 90,176 29,151 4,90 29,29' /%3E%3C/g%3E%3Ccircle cx='90' cy='90' r='2' fill='%2360a5fa' fill-opacity='0.35'/%3E%3C/svg%3E");
   --web-glow: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.22) 0%, transparent 65%);
 }
 
@@ -106,11 +104,9 @@ html, body, #root {
   background-color: var(--bg-page);
   background-image: 
     var(--web-glow),
-    radial-gradient(var(--web-dot) 1.5px, transparent 1.5px),
-    linear-gradient(to right, var(--web-grid) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--web-grid) 1px, transparent 1px);
-  background-size: 100% 700px, 64px 64px, 64px 64px, 64px 64px;
-  background-position: top center, 0 0, 0 0, 0 0;
+    var(--web-pattern);
+  background-size: 100% 700px, 180px 180px;
+  background-position: top center, center center;
   background-attachment: fixed;
   color: var(--text-primary);
   line-height: 1.5;
