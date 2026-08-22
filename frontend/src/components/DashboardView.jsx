@@ -8,13 +8,14 @@ import {
   ArrowUpRight, 
   PiggyBank, 
   RefreshCw, 
-  Sparkles,
-  Quote,
+  Sparkles, 
+  Quote, 
+  History,
+  Send,
+  PlusCircle,
   Layers,
-  ArrowRight,
-  SlidersHorizontal,
-  DollarSign,
-  History
+  ChevronRight,
+  CreditCard as CardIcon
 } from 'lucide-react';
 import { api } from '../api';
 import { getRandomQuote } from '../quotes';
@@ -39,7 +40,7 @@ export function DashboardView({ onNavigate, onOpenForm }) {
         api.getSavingsGoals()
       ]);
       setDashboardData(dashRes);
-      setRecentExpenses(expRes.slice(0, 4));
+      setRecentExpenses(expRes.slice(0, 5));
       setSavingsList(savRes.slice(0, 3));
     } catch (err) {
       console.error('Failed to load dashboard:', err);
@@ -77,7 +78,7 @@ export function DashboardView({ onNavigate, onOpenForm }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', maxWidth: '1000px', margin: '0 auto' }}>
       
-      {/* 1. TOP FILTER CHIPS BAR (Matching Screenshot 1) */}
+      {/* Filter Chips Bar */}
       <div className="filter-chips-bar" style={{ padding: '0.25rem 0' }}>
         {['All', 'Expenses', 'Income', 'Debt Avalanche', 'Savings'].map((chip) => (
           <button
@@ -103,135 +104,194 @@ export function DashboardView({ onNavigate, onOpenForm }) {
         </button>
       </div>
 
-      {/* 2. HERO BALANCE & PERFORMANCE CARD (High-Fidelity Match to Screenshot) */}
+      {/* 1. HERO COBALT / GLOW BALANCE CARD (Adaptive to Both Light & Dark References) */}
       <div className="hero-balance-card">
         
-        {/* Top Header of Card */}
-        <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
+        {/* Top Header Label */}
+        <div style={{ textAlign: 'center', marginBottom: '0.75rem' }}>
           <div className="hero-label" style={{ justifyContent: 'center' }}>
-            <span>Net Worth Balance • USD</span>
+            <span>Net Worth Total • USD</span>
           </div>
-          <div className="hero-amount" style={{ justifyContent: 'center', marginTop: '0.25rem' }}>
+          
+          {/* Main Huge Balance */}
+          <div className="hero-amount" style={{ justifyContent: 'center', margin: '0.35rem 0 0.5rem 0' }}>
             {netWorthNum < 0 && '-'}${netWorthInt}<span className="cents">{netWorthCents}</span>
           </div>
+
+          {/* Breakdown Chips Under Balance (Matching Screenshot 2) */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
+            <span style={{ 
+              fontSize: '0.75rem', 
+              background: 'rgba(255, 255, 255, 0.14)', 
+              color: '#ffffff', 
+              padding: '0.25rem 0.65rem', 
+              borderRadius: '9999px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4
+            }}>
+              <Shield size={12} color="#34d399" /> Saved: ${Number(stock?.total_savings || 0).toLocaleString(undefined, { minimumFractionDigits: 0 })}
+            </span>
+
+            <span style={{ 
+              fontSize: '0.75rem', 
+              background: 'rgba(255, 255, 255, 0.14)', 
+              color: '#ffffff', 
+              padding: '0.25rem 0.65rem', 
+              borderRadius: '9999px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4
+            }}>
+              <CreditCard size={12} color="#fca5a5" /> Debt: ${Number(stock?.total_debt || 0).toLocaleString(undefined, { minimumFractionDigits: 0 })}
+            </span>
+          </div>
         </div>
 
-        {/* 2-Column Hero Split: Quick Action Tiles & Live Performance Sparkline */}
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
-          gap: '1rem',
-          paddingTop: '1rem',
-          borderTop: '1px solid rgba(255, 255, 255, 0.12)'
+        {/* 3D Floating Smart Card Visual (Matching Reference Screenshot 2) */}
+        <div style={{
+          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #334155 100%)',
+          borderRadius: '1.25rem',
+          padding: '1.2rem 1.5rem',
+          margin: '1.25rem auto 1rem auto',
+          maxWidth: '380px',
+          boxShadow: '0 18px 30px -8px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.12)',
+          position: 'relative',
+          overflow: 'hidden'
         }}>
-          
-          {/* Left: 2x2 Quick Action Grid (Matching Screenshot) */}
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: '1fr 1fr', 
-            gap: '0.65rem' 
-          }}>
-            <button 
-              className="action-tile-btn"
-              onClick={() => onNavigate('expense')}
-              title="Log an Expense"
-            >
-              <ArrowDownRight size={18} color="#f87171" />
-              <span>Expense</span>
-            </button>
+          {/* Card subtle shine */}
+          <div style={{
+            position: 'absolute',
+            top: '-50%',
+            right: '-30%',
+            width: '180px',
+            height: '180px',
+            background: 'radial-gradient(circle, rgba(59, 130, 246, 0.35) 0%, transparent 70%)',
+            pointerEvents: 'none'
+          }} />
 
-            <button 
-              className="action-tile-btn"
-              onClick={() => onNavigate('income')}
-              title="Add Income Stream"
-            >
-              <ArrowUpRight size={18} color="#34d399" />
-              <span>Income</span>
-            </button>
-
-            <button 
-              className="action-tile-btn"
-              onClick={() => onNavigate('debt')}
-              title="Pay or Manage Debt"
-            >
-              <CreditCard size={18} color="#fbbf24" />
-              <span>Pay Debt</span>
-            </button>
-
-            <button 
-              className="action-tile-btn"
-              onClick={() => onNavigate('savings')}
-              title="Save for Goals"
-            >
-              <PiggyBank size={18} color="#60a5fa" />
-              <span>Deposit</span>
-            </button>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <span style={{ fontSize: '0.85rem', fontWeight: 800, letterSpacing: '0.08em', color: '#94a3b8', textTransform: 'uppercase' }}>
+              FinanceTracker
+            </span>
+            <div style={{ width: '28px', height: '18px', borderRadius: '4px', background: 'linear-gradient(90deg, #f59e0b, #fbbf24)', opacity: 0.9 }} />
           </div>
 
-          {/* Right: Performance Sparkline Widget (Matching Screenshot) */}
-          <div style={{ 
-            background: 'rgba(15, 23, 42, 0.55)', 
-            border: '1px solid rgba(255, 255, 255, 0.1)', 
-            borderRadius: '1rem', 
-            padding: '0.875rem 1rem',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            backdropFilter: 'blur(12px)'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'rgba(255, 255, 255, 0.8)' }}>
-                Cash Flow Health
-              </div>
-              <div style={{ 
-                fontSize: '0.75rem', 
-                fontWeight: 700, 
-                color: '#34d399', 
-                background: 'rgba(52, 211, 153, 0.15)', 
-                padding: '0.2rem 0.5rem', 
-                borderRadius: '9999px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2
-              }}>
-                ▲ +{flow?.planned_savings_rate_pct}%
-              </div>
-            </div>
-
-            {/* Glowing SVG Sparkline Curve */}
-            <div style={{ height: '55px', margin: '0.35rem 0' }}>
-              <svg width="100%" height="100%" viewBox="0 0 200 60" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="sparklineGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.4" />
-                    <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.0" />
-                  </linearGradient>
-                </defs>
-                <path
-                  d="M0,45 Q25,48 50,38 T100,22 T140,28 T170,12 T200,8 L200,60 L0,60 Z"
-                  fill="url(#sparklineGrad)"
-                />
-                <path
-                  d="M0,45 Q25,48 50,38 T100,22 T140,28 T170,12 T200,8"
-                  fill="none"
-                  stroke="#60a5fa"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                />
-                <circle cx="200" cy="8" r="3.5" fill="#38bdf8" />
-              </svg>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: 'rgba(255, 255, 255, 0.6)' }}>
-              <span>Monthly Inflow: +${Number(flow?.normalized_income || 0).toFixed(0)}</span>
-              <span>Spend: -${Number(flow?.actual_expense || 0).toFixed(0)}</span>
-            </div>
+          <div style={{ fontSize: '1rem', fontWeight: 600, letterSpacing: '0.22em', color: '#e2e8f0', fontFamily: 'monospace' }}>
+            •••• •••• •••• 2026
           </div>
 
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '1rem' }}>
+            <div>
+              <div style={{ fontSize: '0.65rem', color: '#64748b', textTransform: 'uppercase' }}>Available Cash Flow</div>
+              <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#34d399' }}>
+                +${Number(flow?.net_monthly_flow || 0).toFixed(2)}/mo
+              </div>
+            </div>
+            <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>08/29</span>
+          </div>
         </div>
+
+        {/* 3 Circular Action Buttons (Matching Screenshot 2) */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          gap: '1.5rem',
+          marginTop: '1.25rem',
+          paddingTop: '0.75rem'
+        }}>
+          <div style={{ textAlign: 'center', cursor: 'pointer' }} onClick={() => onNavigate('expense')}>
+            <div style={{
+              width: '3.25rem',
+              height: '3.25rem',
+              borderRadius: '50%',
+              background: 'rgba(15, 23, 42, 0.45)',
+              border: '1px solid rgba(255, 255, 255, 0.18)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 0.35rem auto',
+              color: '#f87171',
+              backdropFilter: 'blur(10px)',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+            }}>
+              <ArrowDownRight size={20} />
+            </div>
+            <span style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.9)', fontWeight: 600 }}>
+              Expense
+            </span>
+          </div>
+
+          <div style={{ textAlign: 'center', cursor: 'pointer' }} onClick={() => onNavigate('income')}>
+            <div style={{
+              width: '3.25rem',
+              height: '3.25rem',
+              borderRadius: '50%',
+              background: 'rgba(15, 23, 42, 0.45)',
+              border: '1px solid rgba(255, 255, 255, 0.18)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 0.35rem auto',
+              color: '#34d399',
+              backdropFilter: 'blur(10px)',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+            }}>
+              <ArrowUpRight size={20} />
+            </div>
+            <span style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.9)', fontWeight: 600 }}>
+              Income
+            </span>
+          </div>
+
+          <div style={{ textAlign: 'center', cursor: 'pointer' }} onClick={() => onNavigate('debt')}>
+            <div style={{
+              width: '3.25rem',
+              height: '3.25rem',
+              borderRadius: '50%',
+              background: 'rgba(15, 23, 42, 0.45)',
+              border: '1px solid rgba(255, 255, 255, 0.18)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 0.35rem auto',
+              color: '#fbbf24',
+              backdropFilter: 'blur(10px)',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+            }}>
+              <CreditCard size={20} />
+            </div>
+            <span style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.9)', fontWeight: 600 }}>
+              Pay Debt
+            </span>
+          </div>
+
+          <div style={{ textAlign: 'center', cursor: 'pointer' }} onClick={() => onNavigate('savings')}>
+            <div style={{
+              width: '3.25rem',
+              height: '3.25rem',
+              borderRadius: '50%',
+              background: 'rgba(15, 23, 42, 0.45)',
+              border: '1px solid rgba(255, 255, 255, 0.18)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 0.35rem auto',
+              color: '#60a5fa',
+              backdropFilter: 'blur(10px)',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+            }}>
+              <PiggyBank size={20} />
+            </div>
+            <span style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.9)', fontWeight: 600 }}>
+              Deposit
+            </span>
+          </div>
+        </div>
+
       </div>
 
-      {/* 3. MOTIVATIONAL QUOTE BANNER */}
+      {/* Motivational Quote Banner */}
       <div className="quote-banner">
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
           <Quote size={20} color="var(--primary)" style={{ flexShrink: 0, marginTop: 2 }} />
@@ -249,86 +309,24 @@ export function DashboardView({ onNavigate, onOpenForm }) {
         </button>
       </div>
 
-      {/* 4. ASSETS & SAVINGS GOALS (Matching "Assets" Sheet in Screenshot) */}
+      {/* 2. OPERATIONS & RECENT TRANSACTIONS (Clean White Elevated Sheet in Light Mode) */}
       <div className="glass-card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <div style={{ fontSize: '1.05rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Shield size={18} color="#34d399" /> Stored Assets & Savings Goals
-          </div>
-          <button 
-            className="btn-secondary" 
-            onClick={() => onNavigate('savings')}
-            style={{ fontSize: '0.75rem', padding: '0.3rem 0.65rem' }}
-          >
-            View all →
-          </button>
-        </div>
-
-        {savingsList.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-            No savings goals set up yet. Create your first goal to build wealth!
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-            {savingsList.map((g, idx) => (
-              <div 
-                key={g.id}
-                className="list-row-item"
-                style={{ cursor: 'pointer' }}
-                onClick={() => onNavigate('savings')}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
-                  <div 
-                    className="row-icon-circle"
-                    style={{
-                      background: idx % 3 === 0 ? 'rgba(59, 130, 246, 0.15)' : idx % 3 === 1 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
-                      color: idx % 3 === 0 ? 'var(--primary)' : idx % 3 === 1 ? 'var(--success)' : 'var(--warning)'
-                    }}
-                  >
-                    <PiggyBank size={18} />
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
-                      {g.name}
-                    </div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                      {g.target_amount ? `Target: $${Number(g.target_amount).toFixed(0)} • ${g.progress_percent}% achieved` : 'Open buffer fund'}
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--success)' }}>
-                    +${Number(g.total_saved).toFixed(2)}
-                  </div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                    ${Number(g.monthly_planned_contribution || g.contribution_amount).toFixed(0)}/mo
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* 5. RECENT TRANSACTIONS (Matching "Recent transactions" in Screenshot) */}
-      <div className="glass-card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <div style={{ fontSize: '1.05rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <History size={18} color="#60a5fa" /> Recent Transactions
+          <div style={{ fontSize: '1.1rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <History size={19} color="var(--primary)" /> Operations & Transactions
           </div>
           <button 
             className="btn-secondary" 
             onClick={() => onNavigate('expense')}
-            style={{ fontSize: '0.75rem', padding: '0.3rem 0.65rem' }}
+            style={{ fontSize: '0.75rem', padding: '0.3rem 0.75rem', borderRadius: '9999px' }}
           >
-            View all →
+            All &gt;
           </button>
         </div>
 
         {recentExpenses.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-            No recent expenses logged. Click "+ Log Expense" to record a transaction!
+            No operations logged yet. Click "+ Add new" to start tracking!
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
@@ -362,6 +360,68 @@ export function DashboardView({ onNavigate, onOpenForm }) {
                   </div>
                   <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
                     {exp.currency}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* 3. STORED SAVINGS GOALS */}
+      <div className="glass-card">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <div style={{ fontSize: '1.1rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Shield size={19} color="var(--success)" /> Stored Savings & Goals
+          </div>
+          <button 
+            className="btn-secondary" 
+            onClick={() => onNavigate('savings')}
+            style={{ fontSize: '0.75rem', padding: '0.3rem 0.75rem', borderRadius: '9999px' }}
+          >
+            All &gt;
+          </button>
+        </div>
+
+        {savingsList.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+            No active savings goals. Create your first goal to automate your wealth!
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
+            {savingsList.map((g, idx) => (
+              <div 
+                key={g.id}
+                className="list-row-item"
+                style={{ cursor: 'pointer' }}
+                onClick={() => onNavigate('savings')}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
+                  <div 
+                    className="row-icon-circle"
+                    style={{
+                      background: idx % 2 === 0 ? 'rgba(59, 130, 246, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+                      color: idx % 2 === 0 ? 'var(--primary)' : 'var(--success)'
+                    }}
+                  >
+                    <PiggyBank size={18} />
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+                      {g.name}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      {g.target_amount ? `Target: $${Number(g.target_amount).toFixed(0)} • ${g.progress_percent}% achieved` : 'Open buffer fund'}
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--success)' }}>
+                    +${Number(g.total_saved).toFixed(2)}
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                    ${Number(g.monthly_planned_contribution || g.contribution_amount).toFixed(0)}/mo
                   </div>
                 </div>
               </div>
