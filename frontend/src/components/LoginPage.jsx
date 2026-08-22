@@ -283,7 +283,7 @@ export function LoginPage({ onAuthSuccess }) {
               <input
                 type="text"
                 className="form-control"
-                placeholder="e.g. Shefin Ismail"
+                placeholder="e.g. Alex Morgan"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 required
