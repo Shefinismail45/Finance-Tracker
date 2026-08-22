@@ -4,11 +4,19 @@ import { X } from 'lucide-react';
 export function BudgetForm({ categories, initialData, onSubmit, onClose, submitting }) {
   const [categoryId, setCategoryId] = useState(initialData?.category_id || categories[0]?.id || '');
   const [plannedAmount, setPlannedAmount] = useState(initialData?.planned_amount ? String(initialData.planned_amount) : '');
-  const [periodMonths, setPeriodMonths] = useState(
+  
+  // Recurring vs One-Time Budget Cap
+  const [isRecurring, setIsRecurring] = useState(
     initialData?.period_months !== undefined && initialData?.period_months !== null
+      ? Number(initialData.period_months) > 0
+      : true
+  );
+  const [frequency, setFrequency] = useState(
+    initialData?.period_months && Number(initialData.period_months) > 0
       ? String(initialData.period_months)
       : '1'
   );
+
   const [currency, setCurrency] = useState(initialData?.currency || 'USD');
   const [error, setError] = useState('');
 
@@ -33,11 +41,13 @@ export function BudgetForm({ categories, initialData, onSubmit, onClose, submitt
       return;
     }
 
+    const numPeriod = isRecurring ? parseInt(frequency) : 0;
+
     try {
       await onSubmit({
         category_id: categoryId,
         planned_amount: numPlanned,
-        period_months: parseInt(periodMonths),
+        period_months: numPeriod,
         currency: currency.toUpperCase()
       });
     } catch (err) {
@@ -108,25 +118,76 @@ export function BudgetForm({ categories, initialData, onSubmit, onClose, submitt
             </div>
           </div>
 
-          <div className="form-group">
-            <label>Budget Period / Frequency</label>
-            <select
-              className="form-control"
-              value={periodMonths}
-              onChange={(e) => setPeriodMonths(e.target.value)}
-            >
-              <option value="0">⚡ One-Time / Fixed Project Cap (Not Frequent)</option>
-              <option value="1">Monthly Cap</option>
-              <option value="3">Quarterly Cap (3 Months)</option>
-              <option value="6">Half-Yearly Cap (6 Months)</option>
-              <option value="12">Annual Cap (12 Months)</option>
-            </select>
-            {periodMonths === '0' && (
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem', fontStyle: 'italic' }}>
-                💡 One-time spending cap for a specific project or event (e.g. Renovation, Wedding, Vacation).
+          {/* Budget Recurrence Toggle */}
+          <div className="form-group" style={{ marginTop: '0.5rem', marginBottom: '1rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.45rem', fontWeight: 600 }}>Budget Recurrence</label>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <button
+                type="button"
+                onClick={() => setIsRecurring(false)}
+                style={{
+                  padding: '0.625rem 0.75rem',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  borderRadius: '0.5rem',
+                  border: !isRecurring ? '2px solid var(--primary)' : '1px solid var(--border-color)',
+                  background: !isRecurring ? 'rgba(99, 102, 241, 0.12)' : 'var(--bg-subtle)',
+                  color: !isRecurring ? 'var(--primary)' : 'var(--text-secondary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.4rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <span>⚡</span> One-Time Cap
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsRecurring(true)}
+                style={{
+                  padding: '0.625rem 0.75rem',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  borderRadius: '0.5rem',
+                  border: isRecurring ? '2px solid var(--primary)' : '1px solid var(--border-color)',
+                  background: isRecurring ? 'rgba(99, 102, 241, 0.12)' : 'var(--bg-subtle)',
+                  color: isRecurring ? 'var(--primary)' : 'var(--text-secondary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.4rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <span>🔄</span> Recurring Budget
+              </button>
+            </div>
+            {!isRecurring && (
+              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.4rem', fontStyle: 'italic' }}>
+                💡 One-time spending cap for a specific project or event (e.g. Renovation, Wedding, Vacation). No recurring period needed.
               </div>
             )}
           </div>
+
+          {/* Frequency is ONLY shown if Recurring is selected */}
+          {isRecurring && (
+            <div className="form-group" style={{ animation: 'fadeIn 0.2s ease-out' }}>
+              <label>Recurring Budget Frequency</label>
+              <select
+                className="form-control"
+                value={frequency}
+                onChange={(e) => setFrequency(e.target.value)}
+              >
+                <option value="1">Monthly Cap</option>
+                <option value="3">Quarterly Cap (3 Months)</option>
+                <option value="6">Half-Yearly Cap (6 Months)</option>
+                <option value="12">Annual Cap (12 Months)</option>
+              </select>
+            </div>
+          )}
 
           <button type="submit" className="btn-primary" disabled={submitting}>
             {submitting ? 'Saving...' : initialData ? 'Update Budget' : 'Save Budget Target'}

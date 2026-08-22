@@ -9,11 +9,19 @@ export function IncomeForm({ categories, initialData, onSubmit, onClose, submitt
 
   const [amount, setAmount] = useState(initialData?.amount ? String(initialData.amount) : '');
   const [currency, setCurrency] = useState(initialData?.currency || 'USD');
-  const [periodMonths, setPeriodMonths] = useState(
+  
+  // Recurring vs One-Time Recurrence
+  const [isRecurring, setIsRecurring] = useState(
     initialData?.period_months !== undefined && initialData?.period_months !== null
+      ? Number(initialData.period_months) > 0
+      : true
+  );
+  const [frequency, setFrequency] = useState(
+    initialData?.period_months && Number(initialData.period_months) > 0
       ? String(initialData.period_months)
       : '1'
   );
+
   const [startDate, setStartDate] = useState(
     initialData?.start_date || new Date().toISOString().slice(0, 10)
   );
@@ -49,9 +57,9 @@ export function IncomeForm({ categories, initialData, onSubmit, onClose, submitt
       return;
     }
 
-    const numPeriod = parseInt(periodMonths);
+    const numPeriod = isRecurring ? parseInt(frequency) : 0;
     if (isNaN(numPeriod) || numPeriod < 0) {
-      setError('Please select a valid payment frequency.');
+      setError('Please select a valid recurring frequency.');
       return;
     }
 
@@ -99,7 +107,7 @@ export function IncomeForm({ categories, initialData, onSubmit, onClose, submitt
         period_months: numPeriod,
         start_date: startDate,
         end_date: endDate || null,
-        is_active: isActive,
+        is_active: isRecurring ? isActive : false,
         note: note.trim() || null
       });
     } catch (err) {
@@ -187,38 +195,81 @@ export function IncomeForm({ categories, initialData, onSubmit, onClose, submitt
             )}
           </div>
 
-          <div className="form-group">
-            <label>Payment Frequency / Period</label>
-            <select
-              className="form-control"
-              value={periodMonths}
-              onChange={(e) => {
-                const val = e.target.value;
-                setPeriodMonths(val);
-                if (val === '0') {
-                  setIsActive(false);
-                } else if (!isActive) {
-                  setIsActive(true);
-                }
-              }}
-            >
-              <option value="0">⚡ One-Time / Lump Sum (Not Frequent / One-off)</option>
-              <option value="1">Monthly (Every month)</option>
-              <option value="2">Bi-Monthly (Every 2 months)</option>
-              <option value="3">Quarterly (Every 3 months)</option>
-              <option value="6">Half-Yearly (Every 6 months)</option>
-              <option value="12">Yearly (Annual lump sum)</option>
-            </select>
-            {periodMonths === '0' && (
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.35rem', fontStyle: 'italic' }}>
-                💡 One-time income inflow (e.g. bonus, freelance payout, gift, asset sale). This is recorded as a single event and will not be counted in ongoing monthly recurring projections.
+          {/* Recurrence Selection: Recurring or Not */}
+          <div className="form-group" style={{ marginTop: '0.5rem', marginBottom: '1rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.45rem', fontWeight: 600 }}>Recurrence</label>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <button
+                type="button"
+                onClick={() => setIsRecurring(false)}
+                style={{
+                  padding: '0.625rem 0.75rem',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  borderRadius: '0.5rem',
+                  border: !isRecurring ? '2px solid var(--primary)' : '1px solid var(--border-color)',
+                  background: !isRecurring ? 'rgba(99, 102, 241, 0.12)' : 'var(--bg-subtle)',
+                  color: !isRecurring ? 'var(--primary)' : 'var(--text-secondary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.4rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <span>⚡</span> One-Time Inflow
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsRecurring(true)}
+                style={{
+                  padding: '0.625rem 0.75rem',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  borderRadius: '0.5rem',
+                  border: isRecurring ? '2px solid var(--primary)' : '1px solid var(--border-color)',
+                  background: isRecurring ? 'rgba(99, 102, 241, 0.12)' : 'var(--bg-subtle)',
+                  color: isRecurring ? 'var(--primary)' : 'var(--text-secondary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.4rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <span>🔄</span> Recurring Income
+              </button>
+            </div>
+            {!isRecurring && (
+              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.4rem', fontStyle: 'italic' }}>
+                💡 One-time income inflow (e.g. bonus, freelance payout, gift, asset sale). No recurring frequency needed.
               </div>
             )}
           </div>
 
+          {/* Frequency is ONLY shown if Recurring is selected */}
+          {isRecurring && (
+            <div className="form-group" style={{ animation: 'fadeIn 0.2s ease-out' }}>
+              <label>Recurring Frequency</label>
+              <select
+                className="form-control"
+                value={frequency}
+                onChange={(e) => setFrequency(e.target.value)}
+              >
+                <option value="1">Monthly (Every month)</option>
+                <option value="2">Bi-Monthly (Every 2 months)</option>
+                <option value="3">Quarterly (Every 3 months)</option>
+                <option value="6">Half-Yearly (Every 6 months)</option>
+                <option value="12">Yearly (Annual salary / retainer)</option>
+              </select>
+            </div>
+          )}
+
           <div className="form-row">
             <div className="form-group">
-              <label>Start Date</label>
+              <label>Date Received</label>
               <input
                 type="date"
                 className="form-control"
@@ -227,15 +278,17 @@ export function IncomeForm({ categories, initialData, onSubmit, onClose, submitt
                 required
               />
             </div>
-            <div className="form-group">
-              <label>End Date (Optional)</label>
-              <input
-                type="date"
-                className="form-control"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
-            </div>
+            {isRecurring && (
+              <div className="form-group">
+                <label>End Date (Optional)</label>
+                <input
+                  type="date"
+                  className="form-control"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
+            )}
           </div>
 
           <div className="form-group">
@@ -243,24 +296,26 @@ export function IncomeForm({ categories, initialData, onSubmit, onClose, submitt
             <input
               type="text"
               className="form-control"
-              placeholder="e.g. Tech Corp Primary Salary"
+              placeholder="e.g. Tech Corp Primary Salary, Client Project"
               value={note}
               onChange={(e) => setNote(e.target.value)}
             />
           </div>
 
-          <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginTop: '1rem', marginBottom: '1.5rem' }}>
-            <input
-              type="checkbox"
-              id="is_active"
-              checked={isActive}
-              onChange={(e) => setIsActive(e.target.checked)}
-              style={{ width: '1.15rem', height: '1.15rem', cursor: 'pointer' }}
-            />
-            <label htmlFor="is_active" style={{ marginBottom: 0, cursor: 'pointer', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-              Active income stream (currently recurring)
-            </label>
-          </div>
+          {isRecurring && (
+            <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginTop: '0.75rem', marginBottom: '1.25rem' }}>
+              <input
+                type="checkbox"
+                id="is_active"
+                checked={isActive}
+                onChange={(e) => setIsActive(e.target.checked)}
+                style={{ width: '1.15rem', height: '1.15rem', cursor: 'pointer' }}
+              />
+              <label htmlFor="is_active" style={{ marginBottom: 0, cursor: 'pointer', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                Active income stream (currently recurring)
+              </label>
+            </div>
+          )}
 
           <button type="submit" className="btn-primary" disabled={submitting}>
             {submitting ? 'Saving...' : initialData ? 'Update Stream' : 'Save Income Stream'}

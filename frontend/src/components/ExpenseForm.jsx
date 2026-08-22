@@ -187,8 +187,8 @@ export function ExpenseForm({ categories, initialData, onSubmit, onClose, submit
             />
           </div>
 
-          <div className="form-group" style={{ marginTop: '1rem', marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem' }}>Expense Frequency</label>
+          <div className="form-group" style={{ marginTop: '0.5rem', marginBottom: '1.25rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.45rem', fontWeight: 600 }}>Recurrence</label>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
               <button
                 type="button"
@@ -198,7 +198,7 @@ export function ExpenseForm({ categories, initialData, onSubmit, onClose, submit
                   fontSize: '0.85rem',
                   fontWeight: 600,
                   borderRadius: '0.5rem',
-                  border: !isRecurring ? '2px solid var(--primary)' : '1px solid var(--border)',
+                  border: !isRecurring ? '2px solid var(--primary)' : '1px solid var(--border-color)',
                   background: !isRecurring ? 'rgba(99, 102, 241, 0.12)' : 'var(--bg-subtle)',
                   color: !isRecurring ? 'var(--primary)' : 'var(--text-secondary)',
                   display: 'flex',
@@ -209,7 +209,7 @@ export function ExpenseForm({ categories, initialData, onSubmit, onClose, submit
                   transition: 'all 0.2s ease'
                 }}
               >
-                <span>⚡</span> One-Time (Not Frequent)
+                <span>⚡</span> One-Time Expense
               </button>
               <button
                 type="button"
@@ -219,7 +219,7 @@ export function ExpenseForm({ categories, initialData, onSubmit, onClose, submit
                   fontSize: '0.85rem',
                   fontWeight: 600,
                   borderRadius: '0.5rem',
-                  border: isRecurring ? '2px solid var(--primary)' : '1px solid var(--border)',
+                  border: isRecurring ? '2px solid var(--primary)' : '1px solid var(--border-color)',
                   background: isRecurring ? 'rgba(99, 102, 241, 0.12)' : 'var(--bg-subtle)',
                   color: isRecurring ? 'var(--primary)' : 'var(--text-secondary)',
                   display: 'flex',
@@ -230,7 +230,7 @@ export function ExpenseForm({ categories, initialData, onSubmit, onClose, submit
                   transition: 'all 0.2s ease'
                 }}
               >
-                <span>🔄</span> Recurring Fixed
+                <span>🔄</span> Recurring Expense
               </button>
             </div>
             {isRecurring ? (
