@@ -3,6 +3,12 @@
   "name": "Personal Finance Tracker",
   "icons": [
     {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    },
+    {
       "src": "/icon-192.png",
       "type": "image/png",
       "sizes": "192x192"
@@ -14,7 +20,7 @@
     }
   ],
   "start_url": "/",
-  "background_color": "#f8fafc",
+  "background_color": "#131b2e",
   "theme_color": "#2563eb",
   "display": "standalone",
   "orientation": "portrait"

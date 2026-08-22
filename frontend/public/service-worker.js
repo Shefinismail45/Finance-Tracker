@@ -1,26 +1,18 @@
-const CACHE_NAME = 'finance-tracker-v1';
-const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json'
-];
+const CACHE_NAME = 'finance-tracker-v3';
 
-// 1. Install event: Cache app shell
+// 1. Install event: Skip waiting immediately
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
-    }).then(() => self.skipWaiting())
-  );
+  self.skipWaiting();
 });
 
-// 2. Activate event: Clean old caches
+// 2. Activate event: Clean ALL old caches and claim clients immediately
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cache) => {
           if (cache !== CACHE_NAME) {
+            console.log('[SW] Deleting old cache:', cache);
             return caches.delete(cache);
           }
         })
@@ -30,42 +22,44 @@ self.addEventListener('activate', (event) => {
 });
 
 // 3. Fetch event strategy:
-// API Requests -> Network-First (fallback to Cache if offline)
-// Static Assets -> Cache-First (fallback to Network)
+// - Navigation & HTML requests -> Network-First (ensures latest Vite assets hash is always loaded)
+// - Static assets (/assets/) -> Network-First with Cache fallback
+// - API requests -> Network-First with Cache fallback
 self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
+  const request = event.request;
+  const url = new URL(request.url);
 
-  if (url.pathname.startsWith('/api/')) {
-    // Network-First for API calls
-    event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          if (response.status === 200) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          }
-          return response;
-        })
-        .catch(() => {
-          // If network fails (offline), return cached API response
-          return caches.match(event.request);
-        })
-    );
-  } else {
-    // Cache-First for static assets
-    event.respondWith(
-      caches.match(event.request).then((cachedResponse) => {
-        if (cachedResponse) {
-          return cachedResponse;
-        }
-        return fetch(event.request).then((response) => {
-          if (response.status === 200) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          }
-          return response;
-        });
-      })
-    );
+  // Ignore non-GET or cross-origin extension requests
+  if (request.method !== 'GET' || !url.protocol.startsWith('http')) {
+    return;
   }
+
+  // Navigation requests (index.html): ALWAYS Network-First
+  if (request.mode === 'navigate' || request.destination === 'document') {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          }
+          return response;
+        })
+        .catch(() => caches.match(request))
+    );
+    return;
+  }
+
+  // All other assets: Try Network first, update cache, fallback to cache if offline
+  event.respondWith(
+    fetch(request)
+      .then((response) => {
+        if (response && response.status === 200) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+        }
+        return response;
+      })
+      .catch(() => caches.match(request))
+  );
 });
