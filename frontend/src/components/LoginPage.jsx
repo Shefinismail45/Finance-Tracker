@@ -144,7 +144,7 @@ export function LoginPage({ onAuthSuccess }) {
     <div style={{
       minHeight: '100vh',
       width: '100%',
-      background: 'var(--bg-page)',
+      background: 'transparent',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',

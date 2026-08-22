@@ -4,81 +4,89 @@
    CSS CUSTOM PROPERTIES / DESIGN TOKENS
    ========================================================================== */
 :root {
-  /* Light Theme Palette */
-  --bg-page: #f4f6fb;
+  /* Light Theme Palette (Sky Blue Tinted Aesthetic) */
+  --bg-page: #ebf4fd;
   --bg-card: #ffffff;
-  --bg-card-glass: rgba(255, 255, 255, 0.9);
-  --bg-surface-hover: #f8fafc;
-  --bg-subtle: #f1f5f9;
+  --bg-card-glass: rgba(255, 255, 255, 0.94);
+  --bg-surface-hover: #f0f7ff;
+  --bg-subtle: #dbeafe;
   
   --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
   
-  --border-color: #e2e8f0;
-  --border-glass: rgba(226, 232, 240, 0.8);
+  --border-color: #bfdbfe;
+  --border-glass: rgba(191, 219, 254, 0.7);
   
   --primary: #2563eb;
   --primary-hover: #1d4ed8;
   --primary-gradient: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-  --hero-gradient: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #2563eb 100%);
+  --hero-gradient: linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #3b82f6 100%);
   
-  --success: #10b981;
+  --success: #059669;
   --success-bg: #ecfdf5;
   --success-text: #047857;
   
-  --danger: #ef4444;
+  --danger: #dc2626;
   --danger-bg: #fef2f2;
   --danger-text: #b91c1c;
   
-  --warning: #f59e0b;
+  --warning: #d97706;
   --warning-bg: #fffbeb;
   --warning-text: #b45309;
   
-  --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
-  --hero-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.25);
+  --card-shadow: 0 4px 20px -2px rgba(37, 99, 235, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
+  --hero-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.3);
   
-  --nav-bg: rgba(255, 255, 255, 0.92);
-  --nav-border: #e2e8f0;
+  --nav-bg: rgba(235, 244, 253, 0.92);
+  --nav-border: #bfdbfe;
+  
+  --web-grid: rgba(37, 99, 235, 0.06);
+  --web-dot: rgba(37, 99, 235, 0.18);
+  --web-glow: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.16) 0%, transparent 60%);
 }
 
 [data-theme="dark"] {
-  /* Dark Theme Palette (Crypto & Sleek Fintech Aesthetic) */
-  --bg-page: #090d16;
-  --bg-card: #111827;
-  --bg-card-glass: rgba(17, 24, 39, 0.85);
-  --bg-surface-hover: #1e293b;
-  --bg-subtle: #1a2234;
+  /* Lighter Dark Theme Palette (Modern Deep Slate Navy) */
+  --bg-page: #131b2e;
+  --bg-card: #1a253d;
+  --bg-card-glass: rgba(26, 37, 61, 0.88);
+  --bg-surface-hover: #243354;
+  --bg-subtle: #1e2b47;
   
   --text-primary: #f8fafc;
   --text-secondary: #cbd5e1;
-  --text-muted: #64748b;
+  --text-muted: #94a3b8;
   
-  --border-color: #1e293b;
-  --border-glass: rgba(255, 255, 255, 0.07);
+  --border-color: #273757;
+  --border-glass: rgba(255, 255, 255, 0.1);
   
   --primary: #3b82f6;
   --primary-hover: #60a5fa;
   --primary-gradient: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
-  --hero-gradient: linear-gradient(135deg, #1e1b4b 0%, #0f172a 45%, #1e293b 100%);
+  --hero-gradient: linear-gradient(135deg, #1e293b 0%, #1e3a8a 50%, #2563eb 100%);
   
   --success: #34d399;
-  --success-bg: rgba(16, 185, 129, 0.15);
+  --success-bg: rgba(16, 185, 129, 0.18);
   --success-text: #34d399;
   
   --danger: #f87171;
-  --danger-bg: rgba(239, 68, 68, 0.15);
+  --danger-bg: rgba(239, 68, 68, 0.18);
   --danger-text: #f87171;
   
   --warning: #fbbf24;
-  --warning-bg: rgba(245, 158, 11, 0.15);
+  --warning-bg: rgba(245, 158, 11, 0.18);
   --warning-text: #fbbf24;
   
-  --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-  --hero-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.6);
+  --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35);
+  --hero-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.5);
   
-  --nav-bg: rgba(15, 23, 42, 0.88);
-  --nav-border: rgba(255, 255, 255, 0.08);
+  --nav-bg: rgba(19, 27, 46, 0.92);
+  --nav-border: #273757;
+  
+  --web-grid: rgba(59, 130, 246, 0.09);
+  --web-dot: rgba(96, 165, 250, 0.28);
+  --web-glow: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.22) 0%, transparent 65%);
 }
 
 /* ==========================================================================
@@ -96,6 +104,14 @@ html, body, #root {
   width: 100%;
   min-height: 100vh;
   background-color: var(--bg-page);
+  background-image: 
+    var(--web-glow),
+    radial-gradient(var(--web-dot) 1px, transparent 1px),
+    linear-gradient(to right, var(--web-grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--web-grid) 1px, transparent 1px);
+  background-size: 100% 600px, 32px 32px, 32px 32px, 32px 32px;
+  background-position: top center, 0 0, 0 0, 0 0;
+  background-attachment: fixed;
   color: var(--text-primary);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -110,7 +126,7 @@ html, body, #root {
   width: 100%;
   min-height: 100vh;
   display: flex;
-  background-color: var(--bg-page);
+  background: transparent;
 }
 
 /* Desktop Sidebar */
