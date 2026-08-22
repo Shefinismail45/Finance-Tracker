@@ -10,6 +10,33 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/favicon.svg" />
     <title>Finance Tracker</title>
+    <script>
+      // Automatic Mobile & Desktop Self-Healing for Cached PWA Builds
+      window.addEventListener('error', function (e) {
+        var msg = e && e.message ? e.message : '';
+        var isChunkError = msg.indexOf('Failed to fetch') !== -1 || 
+                           msg.indexOf('Loading chunk') !== -1 || 
+                           msg.indexOf('dynamically imported module') !== -1;
+        var isScriptError = e && e.target && e.target.tagName === 'SCRIPT';
+
+        if (isChunkError || isScriptError) {
+          var reloaded = sessionStorage.getItem('pft_cache_heal');
+          if (!reloaded) {
+            sessionStorage.setItem('pft_cache_heal', Date.now().toString());
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.getRegistrations().then(function (regs) {
+                for (var i = 0; i < regs.length; i++) {
+                  regs[i].unregister();
+                }
+                window.location.reload();
+              });
+            } else {
+              window.location.reload();
+            }
+          }
+        }
+      }, true);
+    </script>
   </head>
   <body>
     <div id="root"></div>
