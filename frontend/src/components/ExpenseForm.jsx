@@ -33,7 +33,7 @@ export function ExpenseForm({ categories, initialData, onSubmit, onClose, submit
     return {
       date: now.toISOString().slice(0, 10),
       time: `${hours}:${mins}`,
-      allDay: true // Default to All Day
+      allDay: true // Default to All Day (no specific time needed)
     };
   };
 
@@ -206,24 +206,11 @@ export function ExpenseForm({ categories, initialData, onSubmit, onClose, submit
             )}
           </div>
 
-          {/* Date & Time with "All Day" Checkbox */}
-          <div className="form-group">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-              <label style={{ marginBottom: 0, fontWeight: 600 }}>
-                {isAllDay ? 'Date' : 'Date & Time'}
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                <input
-                  type="checkbox"
-                  checked={isAllDay}
-                  onChange={(e) => setIsAllDay(e.target.checked)}
-                  style={{ width: '1.05rem', height: '1.05rem', cursor: 'pointer' }}
-                />
-                <span>All Day (No specific time)</span>
-              </label>
-            </div>
-
-            {isAllDay ? (
+          {/* Dedicated Date & Time Row with "All Day" checkbox */}
+          <div className="form-row">
+            {/* 1. Date Field */}
+            <div className="form-group" style={{ flex: 1 }}>
+              <label>Date</label>
               <input
                 type="date"
                 className="form-control"
@@ -231,28 +218,41 @@ export function ExpenseForm({ categories, initialData, onSubmit, onClose, submit
                 onChange={(e) => setDateVal(e.target.value)}
                 required
               />
-            ) : (
-              <div className="form-row" style={{ animation: 'fadeIn 0.2s ease-out' }}>
-                <div className="form-group" style={{ flex: 3, marginBottom: 0 }}>
+            </div>
+
+            {/* 2. Time Field with All Day Checkbox */}
+            <div className="form-group" style={{ flex: 1 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                <label style={{ marginBottom: 0, fontWeight: 600 }}>Time</label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
                   <input
-                    type="date"
-                    className="form-control"
-                    value={dateVal}
-                    onChange={(e) => setDateVal(e.target.value)}
-                    required
+                    type="checkbox"
+                    checked={isAllDay}
+                    onChange={(e) => setIsAllDay(e.target.checked)}
+                    style={{ width: '0.95rem', height: '0.95rem', cursor: 'pointer' }}
                   />
-                </div>
-                <div className="form-group" style={{ flex: 2, marginBottom: 0 }}>
-                  <input
-                    type="time"
-                    className="form-control"
-                    value={timeVal}
-                    onChange={(e) => setTimeVal(e.target.value)}
-                    required={!isAllDay}
-                  />
-                </div>
+                  <span>All Day</span>
+                </label>
               </div>
-            )}
+              <input
+                type="time"
+                className="form-control"
+                value={isAllDay ? '' : timeVal}
+                onChange={(e) => setTimeVal(e.target.value)}
+                disabled={isAllDay}
+                style={{
+                  opacity: isAllDay ? 0.45 : 1,
+                  cursor: isAllDay ? 'not-allowed' : 'text',
+                  background: isAllDay ? 'var(--bg-subtle)' : 'var(--bg-card)'
+                }}
+                placeholder={isAllDay ? 'All Day' : '12:00'}
+              />
+              {isAllDay && (
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.25rem', fontStyle: 'italic' }}>
+                  ✓ All-day (no time needed)
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="form-group">

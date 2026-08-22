@@ -25,7 +25,6 @@ export function IncomeForm({ categories, initialData, onSubmit, onClose, submitt
   const [startDate, setStartDate] = useState(
     initialData?.start_date || new Date().toISOString().slice(0, 10)
   );
-  const [endDate, setEndDate] = useState(initialData?.end_date || '');
   const [isActive, setIsActive] = useState(initialData?.is_active ?? true);
   const [note, setNote] = useState(initialData?.note || '');
   const [error, setError] = useState('');
@@ -64,12 +63,7 @@ export function IncomeForm({ categories, initialData, onSubmit, onClose, submitt
     }
 
     if (!startDate) {
-      setError('Please select a start date.');
-      return;
-    }
-
-    if (endDate && endDate < startDate) {
-      setError('End date cannot be earlier than start date.');
+      setError('Please select a date.');
       return;
     }
 
@@ -106,7 +100,7 @@ export function IncomeForm({ categories, initialData, onSubmit, onClose, submitt
         currency: currency.toUpperCase(),
         period_months: numPeriod,
         start_date: startDate,
-        end_date: endDate || null,
+        end_date: null,
         is_active: isRecurring ? isActive : false,
         note: note.trim() || null
       });
@@ -130,13 +124,13 @@ export function IncomeForm({ categories, initialData, onSubmit, onClose, submitt
         <form onSubmit={handleSubmit}>
           <div className="form-row">
             <div className="form-group" style={{ flex: 2 }}>
-              <label>Amount Received</label>
+              <label>Income Amount</label>
               <input
                 type="number"
                 step="0.01"
                 min="0.01"
                 className="form-control"
-                placeholder="0.00"
+                placeholder="5000.00"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 required
@@ -160,9 +154,9 @@ export function IncomeForm({ categories, initialData, onSubmit, onClose, submitt
             </div>
           </div>
 
-          {/* Income Category with Universal "Other" */}
+          {/* Category Dropdown with Universal "Other" Option */}
           <div className="form-group">
-            <label>Income Category / Stream Type</label>
+            <label>Income Source / Category</label>
             <select
               className="form-control"
               value={categoryId}
@@ -174,18 +168,18 @@ export function IncomeForm({ categories, initialData, onSubmit, onClose, submitt
                   {cat.name} {cat.is_system_default ? '(Default)' : '(Custom)'}
                 </option>
               ))}
-              <option value="__custom_new__">✨ + Add Custom / Other Stream...</option>
+              <option value="__custom_new__">✨ + Add Custom / Other Source...</option>
             </select>
 
             {isCreatingCustomCat && (
               <div className="custom-other-input-box">
                 <label style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                  <PlusCircle size={14} /> New Custom Income Category Name
+                  <PlusCircle size={14} /> New Custom Source Name
                 </label>
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="e.g. Side Hustle, Consulting, YouTube, Royalties"
+                  placeholder="e.g. Consulting, Royalties, Dividend Payout"
                   value={customCategoryName}
                   onChange={(e) => setCustomCategoryName(e.target.value)}
                   autoFocus
@@ -195,7 +189,7 @@ export function IncomeForm({ categories, initialData, onSubmit, onClose, submitt
             )}
           </div>
 
-          {/* Recurrence Selection: Recurring or Not */}
+          {/* Income Recurrence Toggle */}
           <div className="form-group" style={{ marginTop: '0.5rem', marginBottom: '1rem' }}>
             <label style={{ display: 'block', marginBottom: '0.45rem', fontWeight: 600 }}>Recurrence</label>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
@@ -244,7 +238,7 @@ export function IncomeForm({ categories, initialData, onSubmit, onClose, submitt
             </div>
             {!isRecurring && (
               <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.4rem', fontStyle: 'italic' }}>
-                💡 One-time income inflow (e.g. bonus, freelance payout, gift, asset sale). No recurring frequency needed.
+                💡 One-time income inflow (e.g. bonus, gift, tax refund, freelance gig). No recurring frequency needed.
               </div>
             )}
           </div>
@@ -267,28 +261,15 @@ export function IncomeForm({ categories, initialData, onSubmit, onClose, submitt
             </div>
           )}
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>Date Received</label>
-              <input
-                type="date"
-                className="form-control"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                required
-              />
-            </div>
-            {isRecurring && (
-              <div className="form-group">
-                <label>End Date (Optional)</label>
-                <input
-                  type="date"
-                  className="form-control"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                />
-              </div>
-            )}
+          <div className="form-group">
+            <label>{isRecurring ? 'Start Date' : 'Date Received'}</label>
+            <input
+              type="date"
+              className="form-control"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              required
+            />
           </div>
 
           <div className="form-group">
