@@ -2,8 +2,9 @@ import React from 'react';
 import { Trash2, Edit3, AlertTriangle, PieChart, Sparkles, Plus } from 'lucide-react';
 import { getRandomQuote } from '../quotes';
 import { BudgetSkeleton } from './Skeleton';
+import { BudgetSplitAdvisor } from './BudgetSplitAdvisor';
 
-export function BudgetList({ budgets, onEdit, onDelete, onAddNew, loading }) {
+export function BudgetList({ budgets, onEdit, onDelete, onAddNew, currency = 'USD', loading }) {
   if (loading) {
     return <BudgetSkeleton count={3} />;
   }
@@ -14,7 +15,10 @@ export function BudgetList({ budgets, onEdit, onDelete, onAddNew, loading }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-      {/* Overall Summary Bar */}
+      {/* 1. Smart Budget Split Frameworks Advisor (e.g. 50/30/20, 70/20/10, 80/20) */}
+      <BudgetSplitAdvisor currency={currency} />
+
+      {/* 2. Overall Summary Bar */}
       {budgets.length > 0 && (
         <div className="glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.25rem' }}>
           <div>

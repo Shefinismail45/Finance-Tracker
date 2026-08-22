@@ -508,6 +508,7 @@ export default function App() {
               onEdit={(b) => { setEditingItem(b); setIsFormOpen(true); }}
               onDelete={handleDeleteBudget}
               onAddNew={() => { setEditingItem(null); setIsFormOpen(true); }}
+              currency={currency}
               loading={loading}
             />
           )}
