@@ -7,12 +7,9 @@ import {
   ArrowDownRight, 
   ArrowUpRight, 
   PiggyBank, 
-  RefreshCw, 
-  Sparkles,
-  Quote
+  Sparkles
 } from 'lucide-react';
 import { api } from '../api';
-import { getRandomQuote } from '../quotes';
 import { getCurrencySymbol } from '../currencies';
 
 export function DashboardView({ onNavigate, onOpenForm, currency = 'USD' }) {
@@ -20,7 +17,6 @@ export function DashboardView({ onNavigate, onOpenForm, currency = 'USD' }) {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [quote, setQuote] = useState(getRandomQuote());
 
   const currSymbol = getCurrencySymbol(currency);
 
@@ -41,10 +37,6 @@ export function DashboardView({ onNavigate, onOpenForm, currency = 'USD' }) {
   useEffect(() => {
     fetchDashboard();
   }, [forecastDays]);
-
-  const refreshQuote = () => {
-    setQuote(getRandomQuote());
-  };
 
   if (loading) {
     return <div style={{ textAlign: 'center', padding: '4rem 1rem', color: 'var(--text-muted)' }}>Loading executive dashboard...</div>;
@@ -140,25 +132,7 @@ export function DashboardView({ onNavigate, onOpenForm, currency = 'USD' }) {
         </div>
       </div>
 
-      {/* 2. MOTIVATIONAL QUOTE BANNER */}
-      <div className="quote-banner">
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
-          <Quote size={20} color="var(--primary)" style={{ flexShrink: 0, marginTop: 2 }} />
-          <div>
-            <div className="quote-text">"{quote.quote}"</div>
-            <div className="quote-author">— {quote.author}</div>
-          </div>
-        </div>
-        <button 
-          className="btn-icon" 
-          onClick={refreshQuote} 
-          title="New Motivational Quote"
-        >
-          <RefreshCw size={16} />
-        </button>
-      </div>
-
-      {/* 3. DESKTOP GRID: MONTHLY FLOW & CASH FORECAST */}
+      {/* 2. DESKTOP GRID: MONTHLY FLOW & CASH FORECAST */}
       <div className="grid-2-col">
         
         {/* Monthly Inflow / Outflow Summary */}
