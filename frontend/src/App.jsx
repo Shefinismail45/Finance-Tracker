@@ -25,6 +25,7 @@ import { BudgetList } from './components/BudgetList';
 import { BudgetForm } from './components/BudgetForm';
 import { SearchModal } from './components/SearchModal';
 import { NotificationsModal } from './components/NotificationsModal';
+import { AccountSettingsModal } from './components/AccountSettingsModal';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'expense' | 'income' | 'debt' | 'savings' | 'budget'
@@ -35,6 +36,7 @@ export default function App() {
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
 
   const handleSelectCurrency = (newCurr) => {
     setCurrency(newCurr);
@@ -352,7 +354,7 @@ export default function App() {
         onToggleTheme={toggleTheme}
         user={user}
         onLogout={handleLogout}
-        onOpenAuth={() => {}}
+        onOpenAuth={() => setIsAccountModalOpen(true)}
         currency={currency}
         onSelectCurrency={handleSelectCurrency}
       />
@@ -365,7 +367,7 @@ export default function App() {
           theme={theme}
           onToggleTheme={toggleTheme}
           onOpenForm={() => { setEditingItem(null); setIsFormOpen(true); }}
-          onOpenAuth={handleLogout}
+          onOpenAuth={() => setIsAccountModalOpen(true)}
           currency={currency}
           onSelectCurrency={handleSelectCurrency}
           onOpenSearch={() => setIsSearchOpen(true)}
@@ -566,6 +568,16 @@ export default function App() {
           onClose={() => setIsNotificationsOpen(false)}
           onNavigate={(tab) => { setActiveTab(tab); setIsFormOpen(false); }}
           currency={currency}
+        />
+      )}
+
+      {/* Account Settings & Deletion Modal */}
+      {isAccountModalOpen && (
+        <AccountSettingsModal
+          user={user}
+          onClose={() => setIsAccountModalOpen(false)}
+          onLogout={handleLogout}
+          onDataReset={loadData}
         />
       )}
     </div>

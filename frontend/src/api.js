@@ -1094,5 +1094,41 @@ export const api = {
         budgets
       }
     };
+  },
+
+  // 12. ACCOUNT DATA & PROFILE DELETION
+  clearAllUserData: async () => {
+    const userId = await getActiveUserId();
+    if (!userId) return;
+
+    if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
+      await supabase.from('debt_payments').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await supabase.from('savings_contributions').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await supabase.from('expenses').delete().eq('user_id', userId);
+      await supabase.from('incomes').delete().eq('user_id', userId);
+      await supabase.from('debts').delete().eq('user_id', userId);
+      await supabase.from('savings_goals').delete().eq('user_id', userId);
+      await supabase.from('budgets').delete().eq('user_id', userId);
+      await supabase.from('categories').delete().eq('user_id', userId);
+    } else {
+      ['expenses', 'incomes', 'debts', 'debt_payments', 'savings_goals', 'savings_contributions', 'budgets'].forEach(k => {
+        localStorage.removeItem(`pft_${k}`);
+      });
+    }
+  },
+
+  deleteUserAccount: async () => {
+    const userId = await getActiveUserId();
+    if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
+      await api.clearAllUserData();
+      try {
+        await supabase.rpc('delete_user');
+      } catch (e) {}
+      await supabase.auth.signOut();
+    } else {
+      ['expenses', 'incomes', 'debts', 'debt_payments', 'savings_goals', 'savings_contributions', 'budgets', 'demo_user'].forEach(k => {
+        localStorage.removeItem(`pft_${k}`);
+      });
+    }
   }
 };

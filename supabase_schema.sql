@@ -333,3 +333,16 @@ INSERT INTO public.categories (user_id, kind, name, icon) VALUES
     (NULL, 'income', 'Gifts & Grants', 'gift'),
     (NULL, 'income', 'Other Income', 'dollar-sign')
 ON CONFLICT DO NOTHING;
+
+-- ==============================================================================
+-- 9. USER ACCOUNT DELETION FUNCTION (CASCADE)
+-- ==============================================================================
+CREATE OR REPLACE FUNCTION public.delete_user()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    DELETE FROM auth.users WHERE id = auth.uid();
+END;
+$$;
