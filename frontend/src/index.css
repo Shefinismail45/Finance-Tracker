@@ -41,8 +41,9 @@
   --nav-bg: rgba(255, 255, 255, 0.94);
   --nav-border: #e2e8f0;
   
-  --web-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cg stroke='%23334155' stroke-width='0.75' stroke-opacity='0.08' fill='none'%3E%3Cpath d='M90 0 L90 180 M0 90 L180 90 M0 0 L180 180 M180 0 L0 180' /%3E%3Cpolygon points='90,70 104,76 110,90 104,104 90,110 76,104 70,90 76,76' /%3E%3Cpolygon points='90,48 120,60 132,90 120,120 90,132 60,120 48,90 60,60' /%3E%3Cpolygon points='90,26 135,45 154,90 135,135 90,154 45,135 26,90 45,45' /%3E%3Cpolygon points='90,4 151,29 176,90 151,151 90,176 29,151 4,90 29,29' /%3E%3C/g%3E%3Ccircle cx='90' cy='90' r='1.5' fill='%232563eb' fill-opacity='0.25'/%3E%3C/svg%3E");
-  --web-glow: radial-gradient(circle at 50% 0%, rgba(191, 219, 254, 0.28) 0%, transparent 60%);
+  --bg-pattern-dot: rgba(71, 85, 105, 0.12);
+  --bg-pattern-line: rgba(71, 85, 105, 0.04);
+  --ambient-glow: radial-gradient(circle at 50% 0%, rgba(191, 219, 254, 0.35) 0%, transparent 60%);
 }
 
 [data-theme="dark"] {
@@ -63,7 +64,7 @@
   --primary: #3b82f6;
   --primary-hover: #60a5fa;
   --primary-gradient: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
-  --hero-gradient: linear-gradient(135deg, #1e293b 0%, #1e3a8a 50%, #2563eb 100%);
+  --hero-gradient: linear-gradient(180deg, rgba(19, 27, 46, 0.95) 0%, rgba(30, 58, 138, 0.85) 65%, rgba(37, 99, 235, 0.65) 100%);
   
   --success: #34d399;
   --success-bg: rgba(16, 185, 129, 0.18);
@@ -83,8 +84,9 @@
   --nav-bg: rgba(19, 27, 46, 0.92);
   --nav-border: #273757;
   
-  --web-pattern: url('/spider_web_bg.jpg');
-  --web-glow: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.3) 0%, transparent 65%);
+  --bg-pattern-dot: rgba(96, 165, 250, 0.22);
+  --bg-pattern-line: rgba(59, 130, 246, 0.06);
+  --ambient-glow: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.22) 0%, transparent 65%);
 }
 
 /* ==========================================================================
@@ -103,12 +105,12 @@ html, body, #root {
   min-height: 100vh;
   background-color: var(--bg-page);
   background-image: 
-    var(--web-glow),
-    linear-gradient(rgba(19, 27, 46, 0.88), rgba(15, 23, 42, 0.94)),
-    var(--web-pattern);
-  background-size: 100% 700px, 100% 100%, cover;
-  background-position: top center, center center, center center;
-  background-repeat: no-repeat, no-repeat, no-repeat;
+    var(--ambient-glow),
+    radial-gradient(var(--bg-pattern-dot) 1px, transparent 1px),
+    linear-gradient(to right, var(--bg-pattern-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--bg-pattern-line) 1px, transparent 1px);
+  background-size: 100% 700px, 28px 28px, 28px 28px, 28px 28px;
+  background-position: top center, 0 0, 0 0, 0 0;
   background-attachment: fixed;
   color: var(--text-primary);
   line-height: 1.5;
