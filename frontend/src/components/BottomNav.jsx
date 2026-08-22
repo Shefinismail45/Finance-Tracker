@@ -28,8 +28,9 @@ export function BottomNav({ activeTab, onSelectTab }) {
             key={item.id}
             className={`bottom-nav-item ${isActive ? 'active' : ''}`}
             onClick={() => onSelectTab(item.id)}
+            title={item.label}
           >
-            <Icon size={20} />
+            <Icon size={18} />
             <span>{item.label}</span>
           </button>
         );

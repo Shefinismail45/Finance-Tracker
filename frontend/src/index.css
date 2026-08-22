@@ -271,19 +271,20 @@ html, body, #root {
 .mobile-bottom-nav {
   display: flex;
   position: fixed;
-  bottom: 1rem;
-  left: 1rem;
-  right: 1rem;
+  bottom: 0.75rem;
+  left: 0.5rem;
+  right: 0.5rem;
   background: var(--nav-bg);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--nav-border);
   border-radius: 1.5rem;
-  padding: 0.5rem 0.25rem;
-  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2);
+  padding: 0.4rem 0.25rem;
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.25);
   z-index: 50;
-  justify-content: space-around;
+  justify-content: space-between;
   align-items: center;
+  gap: 0.1rem;
 }
 
 @media (min-width: 1024px) {
@@ -293,20 +294,33 @@ html, body, #root {
 }
 
 .bottom-nav-item {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.2rem;
+  justify-content: center;
+  gap: 0.15rem;
   border: none;
   background: transparent;
   color: var(--text-muted);
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 500;
   cursor: pointer;
-  padding: 0.35rem 0.6rem;
-  border-radius: 1rem;
+  padding: 0.3rem 0.1rem;
+  border-radius: 0.75rem;
   transition: all 0.2s ease;
   position: relative;
+  text-align: center;
+}
+
+.bottom-nav-item span {
+  font-size: 0.65rem;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .bottom-nav-item.active {
@@ -317,7 +331,7 @@ html, body, #root {
 .bottom-nav-item.active::after {
   content: '';
   position: absolute;
-  bottom: 0px;
+  bottom: -2px;
   width: 4px;
   height: 4px;
   border-radius: 50%;
