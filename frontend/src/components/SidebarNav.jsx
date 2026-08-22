@@ -23,7 +23,7 @@ export function SidebarNav({ activeTab, onSelectTab, theme, onToggleTheme, user,
     { id: 'budget', label: 'Budgets & Rules', icon: PieChart },
   ];
 
-  const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'Alex Johnson';
+  const userName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'User';
   const userInitials = userName.slice(0, 2).toUpperCase();
 
   return (
@@ -36,7 +36,7 @@ export function SidebarNav({ activeTab, onSelectTab, theme, onToggleTheme, user,
           </div>
           <div>
             <div className="brand-title">FinanceTracker</div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Direct Supabase v2.0</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Smart Wealth & Budget</div>
           </div>
         </div>
 
