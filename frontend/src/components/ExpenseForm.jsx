@@ -9,11 +9,39 @@ export function ExpenseForm({ categories, initialData, onSubmit, onClose, submit
   
   const [amount, setAmount] = useState(initialData?.amount ? String(initialData.amount) : '');
   const [currency, setCurrency] = useState(initialData?.currency || defaultCurrency || 'USD');
-  const [occurredAt, setOccurredAt] = useState(
-    initialData?.occurred_at
-      ? new Date(initialData.occurred_at).toISOString().slice(0, 16)
-      : new Date().toISOString().slice(0, 16)
-  );
+  
+  // Date & Time + All Day State
+  const parseInitialDate = () => {
+    if (initialData?.occurred_at) {
+      const dt = new Date(initialData.occurred_at);
+      const isDateOnly = initialData.occurred_at.length === 10 || 
+                         initialData.occurred_at.endsWith('T00:00:00') || 
+                         initialData.occurred_at.endsWith('T12:00:00.000Z') ||
+                         initialData.occurred_at.endsWith('T00:00:00.000Z');
+      const d = dt.toISOString().slice(0, 10);
+      const hours = String(dt.getHours()).padStart(2, '0');
+      const mins = String(dt.getMinutes()).padStart(2, '0');
+      return {
+        date: d,
+        time: `${hours}:${mins}`,
+        allDay: isDateOnly
+      };
+    }
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const mins = String(now.getMinutes()).padStart(2, '0');
+    return {
+      date: now.toISOString().slice(0, 10),
+      time: `${hours}:${mins}`,
+      allDay: true // Default to All Day
+    };
+  };
+
+  const initialDateTime = parseInitialDate();
+  const [dateVal, setDateVal] = useState(initialDateTime.date);
+  const [timeVal, setTimeVal] = useState(initialDateTime.time);
+  const [isAllDay, setIsAllDay] = useState(initialDateTime.allDay);
+
   const [note, setNote] = useState(initialData?.note || '');
   const [isRecurring, setIsRecurring] = useState(initialData?.is_recurring || false);
   const [error, setError] = useState('');
@@ -45,6 +73,11 @@ export function ExpenseForm({ categories, initialData, onSubmit, onClose, submit
       return;
     }
 
+    if (!dateVal) {
+      setError('Please specify a date.');
+      return;
+    }
+
     let finalCategoryId = categoryId;
 
     // Handle universal "Other" custom category creation
@@ -71,12 +104,20 @@ export function ExpenseForm({ categories, initialData, onSubmit, onClose, submit
       return;
     }
 
+    // Determine final ISO timestamp
+    let finalOccurredAt;
+    if (isAllDay) {
+      finalOccurredAt = new Date(`${dateVal}T12:00:00`).toISOString();
+    } else {
+      finalOccurredAt = new Date(`${dateVal}T${timeVal || '00:00'}:00`).toISOString();
+    }
+
     try {
       await onSubmit({
         category_id: finalCategoryId,
         amount: numAmount,
         currency: currency.toUpperCase(),
-        occurred_at: new Date(occurredAt).toISOString(),
+        occurred_at: finalOccurredAt,
         note: note.trim() || null,
         is_recurring: isRecurring
       });
@@ -165,15 +206,53 @@ export function ExpenseForm({ categories, initialData, onSubmit, onClose, submit
             )}
           </div>
 
+          {/* Date & Time with "All Day" Checkbox */}
           <div className="form-group">
-            <label>Date & Time</label>
-            <input
-              type="datetime-local"
-              className="form-control"
-              value={occurredAt}
-              onChange={(e) => setOccurredAt(e.target.value)}
-              required
-            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+              <label style={{ marginBottom: 0, fontWeight: 600 }}>
+                {isAllDay ? 'Date' : 'Date & Time'}
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                <input
+                  type="checkbox"
+                  checked={isAllDay}
+                  onChange={(e) => setIsAllDay(e.target.checked)}
+                  style={{ width: '1.05rem', height: '1.05rem', cursor: 'pointer' }}
+                />
+                <span>All Day (No specific time)</span>
+              </label>
+            </div>
+
+            {isAllDay ? (
+              <input
+                type="date"
+                className="form-control"
+                value={dateVal}
+                onChange={(e) => setDateVal(e.target.value)}
+                required
+              />
+            ) : (
+              <div className="form-row" style={{ animation: 'fadeIn 0.2s ease-out' }}>
+                <div className="form-group" style={{ flex: 3, marginBottom: 0 }}>
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={dateVal}
+                    onChange={(e) => setDateVal(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="form-group" style={{ flex: 2, marginBottom: 0 }}>
+                  <input
+                    type="time"
+                    className="form-control"
+                    value={timeVal}
+                    onChange={(e) => setTimeVal(e.target.value)}
+                    required={!isAllDay}
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="form-group">
