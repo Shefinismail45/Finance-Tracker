@@ -23,6 +23,8 @@ import { SavingsForm } from './components/SavingsForm';
 import { ContributionModal } from './components/ContributionModal';
 import { BudgetList } from './components/BudgetList';
 import { BudgetForm } from './components/BudgetForm';
+import { SearchModal } from './components/SearchModal';
+import { NotificationsModal } from './components/NotificationsModal';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'expense' | 'income' | 'debt' | 'savings' | 'budget'
@@ -30,6 +32,9 @@ export default function App() {
   const [currency, setCurrency] = useState(() => localStorage.getItem('pft_currency') || 'USD');
   const [user, setUser] = useState(null);
   const [authChecking, setAuthChecking] = useState(true);
+
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
   const handleSelectCurrency = (newCurr) => {
     setCurrency(newCurr);
@@ -363,6 +368,8 @@ export default function App() {
           onOpenAuth={handleLogout}
           currency={currency}
           onSelectCurrency={handleSelectCurrency}
+          onOpenSearch={() => setIsSearchOpen(true)}
+          onOpenNotifications={() => setIsNotificationsOpen(true)}
         />
 
         <main className="content-body">
@@ -541,6 +548,24 @@ export default function App() {
           goal={contributionGoalTarget}
           onClose={() => setContributionGoalTarget(null)}
           onContributionChange={loadData}
+        />
+      )}
+
+      {/* Global Spotlight Search Modal */}
+      {isSearchOpen && (
+        <SearchModal
+          onClose={() => setIsSearchOpen(false)}
+          onNavigate={(tab) => { setActiveTab(tab); setIsFormOpen(false); }}
+          currency={currency}
+        />
+      )}
+
+      {/* Financial Notifications & Alerts Modal */}
+      {isNotificationsOpen && (
+        <NotificationsModal
+          onClose={() => setIsNotificationsOpen(false)}
+          onNavigate={(tab) => { setActiveTab(tab); setIsFormOpen(false); }}
+          currency={currency}
         />
       )}
     </div>

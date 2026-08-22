@@ -10,7 +10,9 @@ export function TopNavbar({
   onOpenForm, 
   onOpenAuth,
   currency = 'USD',
-  onSelectCurrency 
+  onSelectCurrency,
+  onOpenSearch,
+  onOpenNotifications 
 }) {
   const rawName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'User';
   const firstName = rawName.trim().split(/\s+/)[0] || 'User';
@@ -90,13 +92,15 @@ export function TopNavbar({
 
         <button
           className="btn-icon"
-          title="Notifications"
+          title="Financial Alerts & Notifications"
+          onClick={onOpenNotifications}
           style={{
             width: '2.2rem',
             height: '2.2rem',
             borderRadius: '50%',
             background: 'var(--bg-subtle)',
-            border: '1px solid var(--border-color)'
+            border: '1px solid var(--border-color)',
+            cursor: 'pointer'
           }}
         >
           <Bell size={15} />
@@ -104,13 +108,15 @@ export function TopNavbar({
 
         <button
           className="btn-icon"
-          title="Search"
+          title="Search All Records (Ctrl+K)"
+          onClick={onOpenSearch}
           style={{
             width: '2.2rem',
             height: '2.2rem',
             borderRadius: '50%',
             background: 'var(--bg-subtle)',
-            border: '1px solid var(--border-color)'
+            border: '1px solid var(--border-color)',
+            cursor: 'pointer'
           }}
         >
           <Search size={15} />
