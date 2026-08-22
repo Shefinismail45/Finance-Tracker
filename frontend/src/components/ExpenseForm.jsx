@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { X, PlusCircle, Tag } from 'lucide-react';
 import { api } from '../api';
 
-export function ExpenseForm({ categories, initialData, onSubmit, onClose, submitting }) {
+export function ExpenseForm({ categories, initialData, onSubmit, onClose, submitting, defaultCurrency = 'USD' }) {
   const [categoryId, setCategoryId] = useState(initialData?.category_id || categories[0]?.id || '');
   const [isCreatingCustomCat, setIsCreatingCustomCat] = useState(false);
   const [customCategoryName, setCustomCategoryName] = useState('');
   
   const [amount, setAmount] = useState(initialData?.amount ? String(initialData.amount) : '');
-  const [currency, setCurrency] = useState(initialData?.currency || 'USD');
+  const [currency, setCurrency] = useState(initialData?.currency || defaultCurrency || 'USD');
   const [occurredAt, setOccurredAt] = useState(
     initialData?.occurred_at
       ? new Date(initialData.occurred_at).toISOString().slice(0, 16)

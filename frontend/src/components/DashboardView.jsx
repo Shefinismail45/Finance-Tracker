@@ -14,13 +14,13 @@ import {
   Send,
   PlusCircle,
   Layers,
-  ChevronRight,
-  CreditCard as CardIcon
+  ChevronRight
 } from 'lucide-react';
 import { api } from '../api';
 import { getRandomQuote } from '../quotes';
+import { getCurrencySymbol } from '../currencies';
 
-export function DashboardView({ onNavigate, onOpenForm }) {
+export function DashboardView({ onNavigate, onOpenForm, currency = 'USD' }) {
   const [forecastDays, setForecastDays] = useState(30);
   const [dashboardData, setDashboardData] = useState(null);
   const [recentExpenses, setRecentExpenses] = useState([]);
@@ -29,6 +29,8 @@ export function DashboardView({ onNavigate, onOpenForm }) {
   const [error, setError] = useState(null);
   const [quote, setQuote] = useState(getRandomQuote());
   const [activeChip, setActiveChip] = useState('All');
+
+  const currSymbol = getCurrencySymbol(currency);
 
   const fetchDashboard = async () => {
     try {
@@ -104,21 +106,21 @@ export function DashboardView({ onNavigate, onOpenForm }) {
         </button>
       </div>
 
-      {/* 1. HERO COBALT / GLOW BALANCE CARD (Adaptive to Both Light & Dark References) */}
+      {/* 1. HERO COBALT / GLOW BALANCE CARD (Using Selected Currency) */}
       <div className="hero-balance-card">
         
         {/* Top Header Label */}
         <div style={{ textAlign: 'center', marginBottom: '0.75rem' }}>
           <div className="hero-label" style={{ justifyContent: 'center' }}>
-            <span>Net Worth Total • USD</span>
+            <span>Net Worth Balance • {currency}</span>
           </div>
           
           {/* Main Huge Balance */}
           <div className="hero-amount" style={{ justifyContent: 'center', margin: '0.35rem 0 0.5rem 0' }}>
-            {netWorthNum < 0 && '-'}${netWorthInt}<span className="cents">{netWorthCents}</span>
+            {netWorthNum < 0 && '-'}{currSymbol}{netWorthInt}<span className="cents">{netWorthCents}</span>
           </div>
 
-          {/* Breakdown Chips Under Balance (Matching Screenshot 2) */}
+          {/* Breakdown Chips Under Balance */}
           <div style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
             <span style={{ 
               fontSize: '0.75rem', 
@@ -130,7 +132,7 @@ export function DashboardView({ onNavigate, onOpenForm }) {
               alignItems: 'center',
               gap: 4
             }}>
-              <Shield size={12} color="#34d399" /> Saved: ${Number(stock?.total_savings || 0).toLocaleString(undefined, { minimumFractionDigits: 0 })}
+              <Shield size={12} color="#34d399" /> Saved: {currSymbol}{Number(stock?.total_savings || 0).toLocaleString(undefined, { minimumFractionDigits: 0 })}
             </span>
 
             <span style={{ 
@@ -143,12 +145,12 @@ export function DashboardView({ onNavigate, onOpenForm }) {
               alignItems: 'center',
               gap: 4
             }}>
-              <CreditCard size={12} color="#fca5a5" /> Debt: ${Number(stock?.total_debt || 0).toLocaleString(undefined, { minimumFractionDigits: 0 })}
+              <CreditCard size={12} color="#fca5a5" /> Debt: {currSymbol}{Number(stock?.total_debt || 0).toLocaleString(undefined, { minimumFractionDigits: 0 })}
             </span>
           </div>
         </div>
 
-        {/* 3D Floating Smart Card Visual (Matching Reference Screenshot 2) */}
+        {/* 3D Floating Smart Card Visual */}
         <div style={{
           background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #334155 100%)',
           borderRadius: '1.25rem',
@@ -172,7 +174,7 @@ export function DashboardView({ onNavigate, onOpenForm }) {
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
             <span style={{ fontSize: '0.85rem', fontWeight: 800, letterSpacing: '0.08em', color: '#94a3b8', textTransform: 'uppercase' }}>
-              FinanceTracker
+              FinanceTracker • {currency}
             </span>
             <div style={{ width: '28px', height: '18px', borderRadius: '4px', background: 'linear-gradient(90deg, #f59e0b, #fbbf24)', opacity: 0.9 }} />
           </div>
@@ -185,14 +187,14 @@ export function DashboardView({ onNavigate, onOpenForm }) {
             <div>
               <div style={{ fontSize: '0.65rem', color: '#64748b', textTransform: 'uppercase' }}>Available Cash Flow</div>
               <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#34d399' }}>
-                +${Number(flow?.net_monthly_flow || 0).toFixed(2)}/mo
+                +{currSymbol}{Number(flow?.net_monthly_flow || 0).toFixed(2)}/mo
               </div>
             </div>
             <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>08/29</span>
           </div>
         </div>
 
-        {/* 3 Circular Action Buttons (Matching Screenshot 2) */}
+        {/* 3 Circular Action Buttons */}
         <div style={{
           display: 'flex',
           justifyContent: 'center',
@@ -309,7 +311,7 @@ export function DashboardView({ onNavigate, onOpenForm }) {
         </button>
       </div>
 
-      {/* 2. OPERATIONS & RECENT TRANSACTIONS (Clean White Elevated Sheet in Light Mode) */}
+      {/* 2. OPERATIONS & RECENT TRANSACTIONS */}
       <div className="glass-card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <div style={{ fontSize: '1.1rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -330,40 +332,43 @@ export function DashboardView({ onNavigate, onOpenForm }) {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-            {recentExpenses.map((exp) => (
-              <div 
-                key={exp.id}
-                className="list-row-item"
-                style={{ cursor: 'pointer' }}
-                onClick={() => onNavigate('expense')}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
-                  <div 
-                    className="row-icon-circle"
-                    style={{ background: 'rgba(239, 68, 68, 0.12)', color: 'var(--danger)' }}
-                  >
-                    <ArrowDownRight size={18} />
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
-                      {exp.category_name}
+            {recentExpenses.map((exp) => {
+              const expSymbol = getCurrencySymbol(exp.currency || currency);
+              return (
+                <div 
+                  key={exp.id}
+                  className="list-row-item"
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => onNavigate('expense')}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
+                    <div 
+                      className="row-icon-circle"
+                      style={{ background: 'rgba(239, 68, 68, 0.12)', color: 'var(--danger)' }}
+                    >
+                      <ArrowDownRight size={18} />
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                      {exp.note ? exp.note : exp.occurred_at?.slice(0, 10)}
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+                        {exp.category_name}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        {exp.note ? exp.note : exp.occurred_at?.slice(0, 10)}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--danger)' }}>
-                    -${Number(exp.amount).toFixed(2)}
-                  </div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                    {exp.currency}
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--danger)' }}>
+                      -{expSymbol}{Number(exp.amount).toFixed(2)}
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                      {exp.currency || currency}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -389,43 +394,46 @@ export function DashboardView({ onNavigate, onOpenForm }) {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-            {savingsList.map((g, idx) => (
-              <div 
-                key={g.id}
-                className="list-row-item"
-                style={{ cursor: 'pointer' }}
-                onClick={() => onNavigate('savings')}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
-                  <div 
-                    className="row-icon-circle"
-                    style={{
-                      background: idx % 2 === 0 ? 'rgba(59, 130, 246, 0.15)' : 'rgba(16, 185, 129, 0.15)',
-                      color: idx % 2 === 0 ? 'var(--primary)' : 'var(--success)'
-                    }}
-                  >
-                    <PiggyBank size={18} />
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
-                      {g.name}
+            {savingsList.map((g, idx) => {
+              const goalSymbol = getCurrencySymbol(g.currency || currency);
+              return (
+                <div 
+                  key={g.id}
+                  className="list-row-item"
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => onNavigate('savings')}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
+                    <div 
+                      className="row-icon-circle"
+                      style={{
+                        background: idx % 2 === 0 ? 'rgba(59, 130, 246, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+                        color: idx % 2 === 0 ? 'var(--primary)' : 'var(--success)'
+                      }}
+                    >
+                      <PiggyBank size={18} />
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                      {g.target_amount ? `Target: $${Number(g.target_amount).toFixed(0)} • ${g.progress_percent}% achieved` : 'Open buffer fund'}
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+                        {g.name}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        {g.target_amount ? `Target: ${goalSymbol}${Number(g.target_amount).toFixed(0)} • ${g.progress_percent}% achieved` : 'Open buffer fund'}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--success)' }}>
-                    +${Number(g.total_saved).toFixed(2)}
-                  </div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                    ${Number(g.monthly_planned_contribution || g.contribution_amount).toFixed(0)}/mo
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--success)' }}>
+                      +{goalSymbol}{Number(g.total_saved).toFixed(2)}
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                      {goalSymbol}{Number(g.monthly_planned_contribution || g.contribution_amount).toFixed(0)}/mo
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

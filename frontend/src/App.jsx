@@ -27,8 +27,14 @@ import { BudgetForm } from './components/BudgetForm';
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'expense' | 'income' | 'debt' | 'savings' | 'budget'
   const [theme, setTheme] = useState(() => localStorage.getItem('pft_theme') || 'dark');
+  const [currency, setCurrency] = useState(() => localStorage.getItem('pft_currency') || 'USD');
   const [user, setUser] = useState(null);
   const [authChecking, setAuthChecking] = useState(true);
+
+  const handleSelectCurrency = (newCurr) => {
+    setCurrency(newCurr);
+    localStorage.setItem('pft_currency', newCurr);
+  };
 
   // Expense State
   const [expenseCategories, setExpenseCategories] = useState([]);
@@ -342,6 +348,8 @@ export default function App() {
         user={user}
         onLogout={handleLogout}
         onOpenAuth={() => {}}
+        currency={currency}
+        onSelectCurrency={handleSelectCurrency}
       />
 
       {/* Main Content Wrapper */}
@@ -353,6 +361,8 @@ export default function App() {
           onToggleTheme={toggleTheme}
           onOpenForm={() => { setEditingItem(null); setIsFormOpen(true); }}
           onOpenAuth={handleLogout}
+          currency={currency}
+          onSelectCurrency={handleSelectCurrency}
         />
 
         <main className="content-body">
@@ -362,6 +372,7 @@ export default function App() {
             <DashboardView 
               onNavigate={(tab) => { setActiveTab(tab); setIsFormOpen(false); }}
               onOpenForm={(tab) => { setActiveTab(tab); setEditingItem(null); setIsFormOpen(true); }}
+              currency={currency}
             />
           )}
 
@@ -469,6 +480,7 @@ export default function App() {
           onSubmit={handleExpenseSubmit}
           onClose={() => { setIsFormOpen(false); setEditingItem(null); }}
           submitting={submitting}
+          defaultCurrency={currency}
         />
       )}
 
@@ -479,6 +491,7 @@ export default function App() {
           onSubmit={handleIncomeSubmit}
           onClose={() => { setIsFormOpen(false); setEditingItem(null); }}
           submitting={submitting}
+          defaultCurrency={currency}
         />
       )}
 
@@ -488,6 +501,7 @@ export default function App() {
           onSubmit={handleDebtSubmit}
           onClose={() => { setIsFormOpen(false); setEditingItem(null); }}
           submitting={submitting}
+          defaultCurrency={currency}
         />
       )}
 
@@ -497,6 +511,7 @@ export default function App() {
           onSubmit={handleSavingsSubmit}
           onClose={() => { setIsFormOpen(false); setEditingItem(null); }}
           submitting={submitting}
+          defaultCurrency={currency}
         />
       )}
 
@@ -507,6 +522,7 @@ export default function App() {
           onSubmit={handleBudgetSubmit}
           onClose={() => { setIsFormOpen(false); setEditingItem(null); }}
           submitting={submitting}
+          defaultCurrency={currency}
         />
       )}
 

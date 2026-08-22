@@ -1,7 +1,17 @@
 import React from 'react';
-import { Bell, Search, Moon, Sun, Plus, User } from 'lucide-react';
+import { Bell, Search, Moon, Sun, Plus, User, Coins } from 'lucide-react';
+import { CURRENCIES } from '../currencies';
 
-export function TopNavbar({ activeTab, user, theme, onToggleTheme, onOpenForm, onOpenAuth }) {
+export function TopNavbar({ 
+  activeTab, 
+  user, 
+  theme, 
+  onToggleTheme, 
+  onOpenForm, 
+  onOpenAuth,
+  currency = 'USD',
+  onSelectCurrency 
+}) {
   const userName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'User';
   const userInitials = userName.slice(0, 2).toUpperCase();
 
@@ -18,7 +28,7 @@ export function TopNavbar({ activeTab, user, theme, onToggleTheme, onOpenForm, o
 
   return (
     <header className="top-navbar">
-      {/* Left side: Avatar + User Greeting (Matching Screenshot) */}
+      {/* Left side: Avatar + User Greeting */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         <div 
           onClick={onOpenAuth}
@@ -48,34 +58,61 @@ export function TopNavbar({ activeTab, user, theme, onToggleTheme, onOpenForm, o
         </div>
       </div>
 
-      {/* Right side: Bell notification, Search, Theme toggle, Add button (Matching Screenshot) */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+      {/* Right side: Currency Selector, Bell, Search, Theme toggle, Add button */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+        
+        {/* Currency Quick Selector */}
+        <div style={{ position: 'relative' }}>
+          <select
+            value={currency}
+            onChange={(e) => onSelectCurrency?.(e.target.value)}
+            style={{
+              padding: '0.4rem 0.65rem',
+              borderRadius: '9999px',
+              border: '1px solid var(--border-color)',
+              background: 'var(--bg-subtle)',
+              color: 'var(--text-primary)',
+              fontSize: '0.78rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              outline: 'none'
+            }}
+            title="Choose your Money Currency"
+          >
+            {CURRENCIES.map(c => (
+              <option key={c.code} value={c.code} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>
+                {c.code} ({c.symbol})
+              </option>
+            ))}
+          </select>
+        </div>
+
         <button
           className="btn-icon"
           title="Notifications"
           style={{
-            width: '2.25rem',
-            height: '2.25rem',
+            width: '2.2rem',
+            height: '2.2rem',
             borderRadius: '50%',
             background: 'var(--bg-subtle)',
             border: '1px solid var(--border-color)'
           }}
         >
-          <Bell size={16} />
+          <Bell size={15} />
         </button>
 
         <button
           className="btn-icon"
           title="Search"
           style={{
-            width: '2.25rem',
-            height: '2.25rem',
+            width: '2.2rem',
+            height: '2.2rem',
             borderRadius: '50%',
             background: 'var(--bg-subtle)',
             border: '1px solid var(--border-color)'
           }}
         >
-          <Search size={16} />
+          <Search size={15} />
         </button>
 
         {/* Theme Switcher Button */}
@@ -84,14 +121,14 @@ export function TopNavbar({ activeTab, user, theme, onToggleTheme, onOpenForm, o
           onClick={onToggleTheme}
           title={theme === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
           style={{
-            width: '2.25rem',
-            height: '2.25rem',
+            width: '2.2rem',
+            height: '2.2rem',
             borderRadius: '50%',
             background: 'var(--bg-subtle)',
             border: '1px solid var(--border-color)'
           }}
         >
-          {theme === 'dark' ? <Moon size={16} color="#38bdf8" /> : <Sun size={16} color="#f59e0b" />}
+          {theme === 'dark' ? <Moon size={15} color="#38bdf8" /> : <Sun size={15} color="#f59e0b" />}
         </button>
 
         {/* Quick Add Button on Top Navbar */}
