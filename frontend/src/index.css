@@ -4,24 +4,24 @@
    CSS CUSTOM PROPERTIES / DESIGN TOKENS
    ========================================================================== */
 :root {
-  /* Light Theme Palette (Sky Blue Tinted Aesthetic) */
-  --bg-page: #ebf4fd;
+  /* Light Theme Palette (Soft Pale Ice Blue Aesthetic) */
+  --bg-page: #f1f5f9;
   --bg-card: #ffffff;
-  --bg-card-glass: rgba(255, 255, 255, 0.94);
-  --bg-surface-hover: #f0f7ff;
-  --bg-subtle: #dbeafe;
+  --bg-card-glass: rgba(255, 255, 255, 0.95);
+  --bg-surface-hover: #f8fafc;
+  --bg-subtle: #edf2f7;
   
   --text-primary: #0f172a;
-  --text-secondary: #334155;
+  --text-secondary: #475569;
   --text-muted: #64748b;
   
-  --border-color: #bfdbfe;
-  --border-glass: rgba(191, 219, 254, 0.7);
+  --border-color: #dbe4ee;
+  --border-glass: rgba(219, 228, 238, 0.8);
   
   --primary: #2563eb;
   --primary-hover: #1d4ed8;
   --primary-gradient: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-  --hero-gradient: linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #3b82f6 100%);
+  --hero-gradient: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #2563eb 100%);
   
   --success: #059669;
   --success-bg: #ecfdf5;
@@ -35,15 +35,15 @@
   --warning-bg: #fffbeb;
   --warning-text: #b45309;
   
-  --card-shadow: 0 4px 20px -2px rgba(37, 99, 235, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
-  --hero-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.3);
+  --card-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
+  --hero-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.22);
   
-  --nav-bg: rgba(235, 244, 253, 0.92);
-  --nav-border: #bfdbfe;
+  --nav-bg: rgba(241, 245, 249, 0.92);
+  --nav-border: #dbe4ee;
   
-  --web-grid: rgba(37, 99, 235, 0.06);
-  --web-dot: rgba(37, 99, 235, 0.18);
-  --web-glow: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.16) 0%, transparent 60%);
+  --web-grid: rgba(71, 85, 105, 0.05);
+  --web-dot: rgba(71, 85, 105, 0.15);
+  --web-glow: radial-gradient(circle at 50% 0%, rgba(191, 219, 254, 0.28) 0%, transparent 60%);
 }
 
 [data-theme="dark"] {
