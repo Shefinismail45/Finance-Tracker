@@ -106,10 +106,10 @@ html, body, #root {
   background-color: var(--bg-page);
   background-image: 
     var(--web-glow),
-    radial-gradient(var(--web-dot) 1px, transparent 1px),
+    radial-gradient(var(--web-dot) 1.5px, transparent 1.5px),
     linear-gradient(to right, var(--web-grid) 1px, transparent 1px),
     linear-gradient(to bottom, var(--web-grid) 1px, transparent 1px);
-  background-size: 100% 600px, 32px 32px, 32px 32px, 32px 32px;
+  background-size: 100% 700px, 64px 64px, 64px 64px, 64px 64px;
   background-position: top center, 0 0, 0 0, 0 0;
   background-attachment: fixed;
   color: var(--text-primary);
