@@ -12,8 +12,9 @@ export function TopNavbar({
   currency = 'USD',
   onSelectCurrency 
 }) {
-  const userName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'User';
-  const userInitials = userName.slice(0, 2).toUpperCase();
+  const rawName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'User';
+  const firstName = rawName.trim().split(/\s+/)[0] || 'User';
+  const userInitials = firstName.slice(0, 2).toUpperCase();
 
   const getAddButtonTitle = () => {
     switch (activeTab) {
@@ -53,7 +54,7 @@ export function TopNavbar({
         </div>
         <div>
           <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
-            Hi {userName}!
+            Hi {firstName}!
           </div>
         </div>
       </div>
