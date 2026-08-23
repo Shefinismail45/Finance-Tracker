@@ -500,3 +500,5 @@ export function DashboardView({ onNavigate, onOpenForm, onOpenReport, currency =
     </div>
   );
 }
+
+export default DashboardView;

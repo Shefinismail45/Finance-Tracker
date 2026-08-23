@@ -15,7 +15,6 @@ import {
   FileImage,
   Share2
 } from 'lucide-react';
-import html2canvas from 'html2canvas';
 import { getCurrencySymbol } from '../currencies';
 import { api } from '../api';
 
@@ -129,6 +128,9 @@ export function FinancialReportModal({ user, currency = 'USD', onClose }) {
     try {
       setGeneratingJpg(true);
       setError(null);
+
+      // Dynamically import html2canvas only when downloading
+      const html2canvas = (await import('html2canvas')).default;
 
       // Render canvas at 2x scale for ultra crisp text and visuals
       const canvas = await html2canvas(reportCardRef.current, {

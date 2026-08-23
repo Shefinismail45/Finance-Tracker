@@ -1,32 +1,60 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, Suspense, lazy } from 'react';
 import { Plus, Wallet } from 'lucide-react';
 import { api } from './api';
 import { supabase } from './supabaseClient';
-import { LoginPage } from './components/LoginPage';
 import { SidebarNav } from './components/SidebarNav';
 import { TopNavbar } from './components/TopNavbar';
 import { BottomNav } from './components/BottomNav';
-import { DashboardView } from './components/DashboardView';
-import { CategoryTotals } from './components/CategoryTotals';
-import { ExpenseList } from './components/ExpenseList';
-import { ExpenseForm } from './components/ExpenseForm';
-import { IncomeSummaryBar } from './components/IncomeSummaryBar';
-import { IncomeList } from './components/IncomeList';
-import { IncomeForm } from './components/IncomeForm';
-import { DebtSummaryBar } from './components/DebtSummaryBar';
-import { DebtList } from './components/DebtList';
-import { DebtForm } from './components/DebtForm';
-import { PaymentModal } from './components/PaymentModal';
-import { SavingsSummaryBar } from './components/SavingsSummaryBar';
-import { SavingsList } from './components/SavingsList';
-import { SavingsForm } from './components/SavingsForm';
-import { ContributionModal } from './components/ContributionModal';
-import { BudgetList } from './components/BudgetList';
-import { BudgetForm } from './components/BudgetForm';
-import { SearchModal } from './components/SearchModal';
-import { NotificationsModal } from './components/NotificationsModal';
-import { AccountSettingsModal } from './components/AccountSettingsModal';
-import { FinancialReportModal } from './components/FinancialReportModal';
+
+// Lazy-loaded top-level screens (Dashboard, Expenses, Income, Debt, Savings, Budgets)
+const DashboardView = lazy(() => import('./components/DashboardView'));
+const ExpensesView = lazy(() => import('./components/ExpensesView'));
+const IncomeView = lazy(() => import('./components/IncomeView'));
+const DebtView = lazy(() => import('./components/DebtView'));
+const SavingsView = lazy(() => import('./components/SavingsView'));
+const BudgetsView = lazy(() => import('./components/BudgetsView'));
+
+// Lazy-loaded modals and authentication page
+const LoginPage = lazy(() => import('./components/LoginPage').then(m => ({ default: m.LoginPage })));
+const ExpenseForm = lazy(() => import('./components/ExpenseForm').then(m => ({ default: m.ExpenseForm })));
+const IncomeForm = lazy(() => import('./components/IncomeForm').then(m => ({ default: m.IncomeForm })));
+const DebtForm = lazy(() => import('./components/DebtForm').then(m => ({ default: m.DebtForm })));
+const PaymentModal = lazy(() => import('./components/PaymentModal').then(m => ({ default: m.PaymentModal })));
+const SavingsForm = lazy(() => import('./components/SavingsForm').then(m => ({ default: m.SavingsForm })));
+const ContributionModal = lazy(() => import('./components/ContributionModal').then(m => ({ default: m.ContributionModal })));
+const BudgetForm = lazy(() => import('./components/BudgetForm').then(m => ({ default: m.BudgetForm })));
+const SearchModal = lazy(() => import('./components/SearchModal').then(m => ({ default: m.SearchModal })));
+const NotificationsModal = lazy(() => import('./components/NotificationsModal').then(m => ({ default: m.NotificationsModal })));
+const AccountSettingsModal = lazy(() => import('./components/AccountSettingsModal').then(m => ({ default: m.AccountSettingsModal })));
+const FinancialReportModal = lazy(() => import('./components/FinancialReportModal').then(m => ({ default: m.FinancialReportModal })));
+
+function ScreenLoadingFallback() {
+  return (
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '4rem 1.5rem',
+      gap: '1rem',
+      color: 'var(--text-muted)'
+    }}>
+      <div
+        style={{
+          width: '2.25rem',
+          height: '2.25rem',
+          border: '3px solid var(--border-color)',
+          borderTopColor: 'var(--primary)',
+          borderRadius: '50%',
+          animation: 'spin 0.8s linear infinite'
+        }}
+      />
+      <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+        Loading view...
+      </span>
+    </div>
+  );
+}
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'expense' | 'income' | 'debt' | 'savings' | 'budget'
@@ -438,7 +466,30 @@ export default function App() {
 
   // 2. FIRST PAGE: Dedicated Login / Auth Page if not authenticated
   if (!user) {
-    return <LoginPage onAuthSuccess={(userObj) => setUser(userObj)} />;
+    return (
+      <Suspense fallback={
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-page)', gap: '1.25rem' }}>
+          <div style={{
+            width: '3.75rem',
+            height: '3.75rem',
+            borderRadius: '1.25rem',
+            background: 'var(--primary-gradient)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white',
+            boxShadow: '0 10px 28px rgba(37, 99, 235, 0.4)'
+          }}>
+            <Wallet size={28} />
+          </div>
+          <div style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
+            Loading FinanceTracker...
+          </div>
+        </div>
+      }>
+        <LoginPage onAuthSuccess={(userObj) => setUser(userObj)} />
+      </Suspense>
+    );
   }
 
   const getActiveTabHasEntries = () => {
@@ -487,71 +538,56 @@ export default function App() {
         <main className="content-body">
           {error && <div className="error-box" style={{ background: 'var(--danger-bg)', color: 'var(--danger-text)', padding: '1rem', borderRadius: '0.75rem', marginBottom: '1.5rem' }}>{error}</div>}
 
-          {activeTab === 'dashboard' && (
-            <DashboardView 
-              onNavigate={(tab) => { setActiveTab(tab); setIsFormOpen(false); }}
-              onOpenForm={(tab) => { setActiveTab(tab); setEditingItem(null); setIsFormOpen(true); }}
-              onOpenReport={() => setIsReportModalOpen(true)}
-              currency={currency}
-            />
-          )}
+          <Suspense fallback={<ScreenLoadingFallback />}>
+            {activeTab === 'dashboard' && (
+              <DashboardView 
+                onNavigate={(tab) => { setActiveTab(tab); setIsFormOpen(false); }}
+                onOpenForm={(tab) => { setActiveTab(tab); setEditingItem(null); setIsFormOpen(true); }}
+                onOpenReport={() => setIsReportModalOpen(true)}
+                currency={currency}
+              />
+            )}
 
-          {activeTab === 'expense' && (
-            <>
-              <CategoryTotals
-                totals={expenseTotals}
-                selectedCategoryId={selectedExpenseCatId}
+            {activeTab === 'expense' && (
+              <ExpensesView
+                expenseTotals={expenseTotals}
+                selectedExpenseCatId={selectedExpenseCatId}
                 onSelectCategory={(id) => setSelectedExpenseCatId(id)}
                 currency={currency}
-                currentSort={expenseSort}
+                expenseSort={expenseSort}
                 onSortChange={(s) => setExpenseSort(s)}
-              />
-
-              <ExpenseList
                 expenses={sortedExpenses}
                 onEdit={(exp) => { setEditingItem(exp); setIsFormOpen(true); }}
                 onDelete={handleDeleteExpense}
                 onAddNew={() => { setEditingItem(null); setIsFormOpen(true); }}
                 loading={loading}
-                currency={currency}
               />
-            </>
-          )}
+            )}
 
-          {activeTab === 'income' && (
-            <>
-              <IncomeSummaryBar
-                summary={incomeSummary}
-                selectedCategoryId={selectedIncomeCatId}
+            {activeTab === 'income' && (
+              <IncomeView
+                incomeSummary={incomeSummary}
+                selectedIncomeCatId={selectedIncomeCatId}
                 onSelectCategory={(id) => setSelectedIncomeCatId(id)}
                 currency={currency}
-                currentSort={incomeSort}
+                incomeSort={incomeSort}
                 onSortChange={(s) => setIncomeSort(s)}
-              />
-
-              <IncomeList
                 incomes={sortedIncomes}
                 onEdit={(inc) => { setEditingItem(inc); setIsFormOpen(true); }}
                 onDelete={handleDeleteIncome}
                 onAddNew={() => { setEditingItem(null); setIsFormOpen(true); }}
                 loading={loading}
-                currency={currency}
               />
-            </>
-          )}
+            )}
 
-          {activeTab === 'debt' && (
-            <>
-              <DebtSummaryBar 
-                summary={debtSummary}
-                activeFilter={debtFilter}
+            {activeTab === 'debt' && (
+              <DebtView 
+                debtSummary={debtSummary}
+                debtFilter={debtFilter}
                 onSelectFilter={(f) => setDebtFilter(f)}
                 currency={currency}
-                currentSort={debtSort}
+                debtSort={debtSort}
                 onSortChange={(s) => setDebtSort(s)}
-              />
-
-              <DebtList
                 debts={sortedDebts}
                 onEdit={(d) => { setEditingItem(d); setIsFormOpen(true); }}
                 onDelete={handleDeleteDebt}
@@ -559,21 +595,15 @@ export default function App() {
                 onViewHistory={(d) => setPaymentDebtTarget(d)}
                 onAddNew={() => { setEditingItem(null); setIsFormOpen(true); }}
                 loading={loading}
-                currency={currency}
               />
-            </>
-          )}
+            )}
 
-          {activeTab === 'savings' && (
-            <>
-              <SavingsSummaryBar 
-                summary={savingsSummary} 
+            {activeTab === 'savings' && (
+              <SavingsView 
+                savingsSummary={savingsSummary} 
                 currency={currency}
-                currentSort={savingsSort}
+                savingsSort={savingsSort}
                 onSortChange={(s) => setSavingsSort(s)}
-              />
-
-              <SavingsList
                 goals={sortedSavingsGoals}
                 onEdit={(g) => { setEditingItem(g); setIsFormOpen(true); }}
                 onDelete={handleDeleteSavingsGoal}
@@ -581,23 +611,22 @@ export default function App() {
                 onViewHistory={(g) => setContributionGoalTarget(g)}
                 onAddNew={() => { setEditingItem(null); setIsFormOpen(true); }}
                 loading={loading}
-                currency={currency}
               />
-            </>
-          )}
+            )}
 
-          {activeTab === 'budget' && (
-            <BudgetList
-              budgets={sortedBudgets}
-              onEdit={(b) => { setEditingItem(b); setIsFormOpen(true); }}
-              onDelete={handleDeleteBudget}
-              onAddNew={() => { setEditingItem(null); setIsFormOpen(true); }}
-              currency={currency}
-              loading={loading}
-              currentSort={budgetSort}
-              onSortChange={(s) => setBudgetSort(s)}
-            />
-          )}
+            {activeTab === 'budget' && (
+              <BudgetsView
+                budgets={sortedBudgets}
+                onEdit={(b) => { setEditingItem(b); setIsFormOpen(true); }}
+                onDelete={handleDeleteBudget}
+                onAddNew={() => { setEditingItem(null); setIsFormOpen(true); }}
+                currency={currency}
+                loading={loading}
+                currentSort={budgetSort}
+                onSortChange={(s) => setBudgetSort(s)}
+              />
+            )}
+          </Suspense>
         </main>
 
         {/* Mobile Floating Bottom Navigation Bar */}
@@ -618,115 +647,118 @@ export default function App() {
         </button>
       )}
 
-      {/* Modals */}
-      {isFormOpen && activeTab === 'expense' && (
-        <ExpenseForm
-          categories={expenseCategories}
-          initialData={editingItem}
-          onSubmit={handleExpenseSubmit}
-          onClose={() => { setIsFormOpen(false); setEditingItem(null); }}
-          submitting={submitting}
-          defaultCurrency={currency}
-        />
-      )}
+      {/* Modals wrapped in Suspense */}
+      <Suspense fallback={null}>
+        {isFormOpen && activeTab === 'expense' && (
+          <ExpenseForm
+            categories={expenseCategories}
+            initialData={editingItem}
+            onSubmit={handleExpenseSubmit}
+            onClose={() => { setIsFormOpen(false); setEditingItem(null); }}
+            submitting={submitting}
+            defaultCurrency={currency}
+          />
+        )}
 
-      {isFormOpen && activeTab === 'income' && (
-        <IncomeForm
-          categories={incomeCategories}
-          initialData={editingItem}
-          onSubmit={handleIncomeSubmit}
-          onClose={() => { setIsFormOpen(false); setEditingItem(null); }}
-          submitting={submitting}
-          defaultCurrency={currency}
-        />
-      )}
+        {isFormOpen && activeTab === 'income' && (
+          <IncomeForm
+            categories={incomeCategories}
+            initialData={editingItem}
+            onSubmit={handleIncomeSubmit}
+            onClose={() => { setIsFormOpen(false); setEditingItem(null); }}
+            submitting={submitting}
+            defaultCurrency={currency}
+          />
+        )}
 
-      {isFormOpen && activeTab === 'debt' && (
-        <DebtForm
-          initialData={editingItem}
-          onSubmit={handleDebtSubmit}
-          onClose={() => { setIsFormOpen(false); setEditingItem(null); }}
-          submitting={submitting}
-          defaultCurrency={currency}
-        />
-      )}
+        {isFormOpen && activeTab === 'debt' && (
+          <DebtForm
+            initialData={editingItem}
+            onSubmit={handleDebtSubmit}
+            onClose={() => { setIsFormOpen(false); setEditingItem(null); }}
+            submitting={submitting}
+            defaultCurrency={currency}
+          />
+        )}
 
-      {isFormOpen && activeTab === 'savings' && (
-        <SavingsForm
-          initialData={editingItem}
-          onSubmit={handleSavingsSubmit}
-          onClose={() => { setIsFormOpen(false); setEditingItem(null); }}
-          submitting={submitting}
-          defaultCurrency={currency}
-        />
-      )}
+        {isFormOpen && activeTab === 'savings' && (
+          <SavingsForm
+            initialData={editingItem}
+            onSubmit={handleSavingsSubmit}
+            onClose={() => { setIsFormOpen(false); setEditingItem(null); }}
+            submitting={submitting}
+            defaultCurrency={currency}
+          />
+        )}
 
-      {isFormOpen && activeTab === 'budget' && (
-        <BudgetForm
-          categories={expenseCategories}
-          initialData={editingItem}
-          onSubmit={handleBudgetSubmit}
-          onClose={() => { setIsFormOpen(false); setEditingItem(null); }}
-          submitting={submitting}
-          defaultCurrency={currency}
-        />
-      )}
+        {isFormOpen && activeTab === 'budget' && (
+          <BudgetForm
+            categories={expenseCategories}
+            initialData={editingItem}
+            onSubmit={handleBudgetSubmit}
+            onClose={() => { setIsFormOpen(false); setEditingItem(null); }}
+            submitting={submitting}
+            defaultCurrency={currency}
+          />
+        )}
 
-      {/* Debt Payment Modal */}
-      {paymentDebtTarget && (
-        <PaymentModal
-          debt={paymentDebtTarget}
-          onClose={() => setPaymentDebtTarget(null)}
-          onPaymentChange={loadData}
-        />
-      )}
+        {/* Debt Payment Modal */}
+        {paymentDebtTarget && (
+          <PaymentModal
+            debt={paymentDebtTarget}
+            onClose={() => setPaymentDebtTarget(null)}
+            onPaymentChange={loadData}
+          />
+        )}
 
-      {/* Savings Contribution Modal */}
-      {contributionGoalTarget && (
-        <ContributionModal
-          goal={contributionGoalTarget}
-          onClose={() => setContributionGoalTarget(null)}
-          onContributionChange={loadData}
-        />
-      )}
+        {/* Savings Contribution Modal */}
+        {contributionGoalTarget && (
+          <ContributionModal
+            goal={contributionGoalTarget}
+            onClose={() => setContributionGoalTarget(null)}
+            onContributionChange={loadData}
+          />
+        )}
 
-      {/* Global Spotlight Search Modal */}
-      {isSearchOpen && (
-        <SearchModal
-          onClose={() => setIsSearchOpen(false)}
-          onNavigate={(tab) => { setActiveTab(tab); setIsFormOpen(false); }}
-          currency={currency}
-        />
-      )}
+        {/* Global Spotlight Search Modal */}
+        {isSearchOpen && (
+          <SearchModal
+            onClose={() => setIsSearchOpen(false)}
+            onNavigate={(tab) => { setActiveTab(tab); setIsFormOpen(false); }}
+            currency={currency}
+          />
+        )}
 
-      {/* Financial Notifications & Alerts Modal */}
-      {isNotificationsOpen && (
-        <NotificationsModal
-          onClose={() => setIsNotificationsOpen(false)}
-          onNavigate={(tab) => { setActiveTab(tab); setIsFormOpen(false); }}
-          currency={currency}
-        />
-      )}
+        {/* Financial Notifications & Alerts Modal */}
+        {isNotificationsOpen && (
+          <NotificationsModal
+            onClose={() => setIsNotificationsOpen(false)}
+            onNavigate={(tab) => { setActiveTab(tab); setIsFormOpen(false); }}
+            currency={currency}
+          />
+        )}
 
-      {/* Account Settings & Deletion Modal */}
-      {isAccountModalOpen && (
-        <AccountSettingsModal
-          user={user}
-          onClose={() => setIsAccountModalOpen(false)}
-          onLogout={handleLogout}
-          onDataReset={loadData}
-          onOpenReport={() => setIsReportModalOpen(true)}
-        />
-      )}
+        {/* Account Settings & Deletion Modal */}
+        {isAccountModalOpen && (
+          <AccountSettingsModal
+            user={user}
+            onClose={() => setIsAccountModalOpen(false)}
+            onLogout={handleLogout}
+            onDataReset={loadData}
+            onOpenReport={() => setIsReportModalOpen(true)}
+          />
+        )}
 
-      {/* Visual Financial Report Modal (JPG Download) */}
-      {isReportModalOpen && (
-        <FinancialReportModal
-          user={user}
-          currency={currency}
-          onClose={() => setIsReportModalOpen(false)}
-        />
-      )}
+        {/* Visual Financial Report Modal (JPG Download) */}
+        {isReportModalOpen && (
+          <FinancialReportModal
+            user={user}
+            currency={currency}
+            onClose={() => setIsReportModalOpen(false)}
+          />
+        )}
+      </Suspense>
     </div>
   );
 }
+

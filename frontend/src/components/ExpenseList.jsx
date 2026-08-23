@@ -72,7 +72,7 @@ export function ExpenseList({ expenses, onEdit, onDelete, onAddNew, loading, cur
                   <span>{dateStr}</span>
                   {exp.note && <span>• {exp.note}</span>}
                   {exp.is_recurring && (
-                    <span style={{ background: 'rgba(99, 102, 241, 0.15)', color: '#6366f1', padding: '0.1rem 0.4rem', borderRadius: '0.25rem', fontSize: '0.7rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                    <span style={{ background: 'rgba(99, 102, 241, 0.15)', color: '#6366f1', padding: '0.1rem 0.4rem', borderRadius: '0.25rem', fontSize: '0.7rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 2, whiteSpace: 'nowrap' }}>
                       <Repeat size={10} /> Recurring
                     </span>
                   )}

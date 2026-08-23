@@ -77,7 +77,7 @@ export function IncomeList({ incomes, onEdit, onDelete, onAddNew, loading, curre
                 <Banknote size={20} />
               </div>
               <div className="row-details">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', minWidth: 0, width: '100%' }}>
                   <span className="row-title">{inc.category_name || 'Income Stream'}</span>
                   <span
                     style={{
@@ -86,13 +86,14 @@ export function IncomeList({ incomes, onEdit, onDelete, onAddNew, loading, curre
                       color: isOneTime ? '#3b82f6' : 'var(--success-text)',
                       padding: '0.1rem 0.45rem',
                       borderRadius: '0.25rem',
-                      fontWeight: 700
+                      fontWeight: 700,
+                      whiteSpace: 'nowrap'
                     }}
                   >
                     {periodText}
                   </span>
                   {!inc.is_active && !isOneTime && (
-                    <span style={{ fontSize: '0.7rem', background: 'var(--bg-subtle)', color: 'var(--text-muted)', padding: '0.1rem 0.4rem', borderRadius: '0.25rem' }}>
+                    <span style={{ fontSize: '0.7rem', background: 'var(--bg-subtle)', color: 'var(--text-muted)', padding: '0.1rem 0.4rem', borderRadius: '0.25rem', whiteSpace: 'nowrap' }}>
                       Inactive
                     </span>
                   )}
