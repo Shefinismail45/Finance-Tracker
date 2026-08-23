@@ -471,8 +471,10 @@ html, body, #root {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 1.25rem;
   transition: all 0.2s ease;
   box-shadow: var(--card-shadow);
+  min-height: 4.75rem;
 }
 
 .item-row:hover {
@@ -484,6 +486,8 @@ html, body, #root {
   display: flex;
   align-items: center;
   gap: 1rem;
+  flex: 1;
+  min-width: 0;
 }
 
 .row-icon-circle {
@@ -520,13 +524,15 @@ html, body, #root {
 .row-details {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 0.2rem;
+  min-width: 0;
 }
 
 .row-title {
-  font-size: 1rem;
+  font-size: 0.98rem;
   font-weight: 700;
   color: var(--text-primary);
+  word-break: break-word;
 }
 
 .row-subtitle {
@@ -534,21 +540,32 @@ html, body, #root {
   color: var(--text-muted);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
   flex-wrap: wrap;
 }
 
 .row-right {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.15rem;
   text-align: right;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.row-amount-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  min-width: 85px;
 }
 
 .row-amount {
   font-size: 1.15rem;
   font-weight: 800;
   letter-spacing: -0.01em;
+  line-height: 1.2;
 }
 
 .row-amount.expense {
@@ -557,6 +574,15 @@ html, body, #root {
 
 .row-amount.income {
   color: var(--success);
+}
+
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding-left: 0.85rem;
+  border-left: 1px solid var(--border-color);
+  flex-shrink: 0;
 }
 
 /* ==========================================================================
@@ -793,26 +819,35 @@ html, body, #root {
 }
 
 .btn-icon {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
   cursor: pointer;
-  padding: 0.4rem;
-  border-radius: 0.5rem;
-  display: flex;
+  width: 2.15rem;
+  height: 2.15rem;
+  border-radius: 0.55rem;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .btn-icon:hover {
-  background: var(--bg-subtle);
+  background: var(--bg-surface-hover);
   color: var(--text-primary);
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.btn-icon.delete {
+  color: var(--text-muted);
 }
 
 .btn-icon.delete:hover {
   background: var(--danger-bg);
   color: var(--danger);
+  border-color: rgba(239, 68, 68, 0.3);
 }
 
 /* Floating Action Button for Mobile */

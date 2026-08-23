@@ -81,21 +81,21 @@ export function ExpenseList({ expenses, onEdit, onDelete, onAddNew, loading, cur
             </div>
 
             <div className="row-right">
-              <div>
+              <div className="row-amount-block">
                 <div className="row-amount expense">
                   -{currSymbol}{Number(exp.amount).toFixed(2)}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>
                   {exp.currency || currency}
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '0.25rem' }}>
-                <button className="btn-icon" onClick={() => onEdit(exp)} title="Edit Expense">
-                  <Edit3 size={16} />
+              <div className="row-actions">
+                <button className="btn-icon" onClick={() => onEdit(exp)} title="Edit Expense" aria-label="Edit">
+                  <Edit3 size={15} />
                 </button>
-                <button className="btn-icon delete" onClick={() => onDelete(exp.id)} title="Delete Expense">
-                  <Trash2 size={16} />
+                <button className="btn-icon delete" onClick={() => onDelete(exp.id)} title="Delete Expense" aria-label="Delete">
+                  <Trash2 size={15} />
                 </button>
               </div>
             </div>

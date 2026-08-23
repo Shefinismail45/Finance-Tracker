@@ -105,21 +105,21 @@ export function IncomeList({ incomes, onEdit, onDelete, onAddNew, loading, curre
             </div>
 
             <div className="row-right">
-              <div>
+              <div className="row-amount-block">
                 <div className="row-amount income">
                   +{currSymbol}{Number(inc.amount).toFixed(2)}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>
                   {isOneTime ? 'One-time inflow' : `≈ ${currSymbol}${monthlyAmt.toFixed(2)}/mo`}
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '0.25rem' }}>
-                <button className="btn-icon" onClick={() => onEdit(inc)} title="Edit Stream">
-                  <Edit3 size={16} />
+              <div className="row-actions">
+                <button className="btn-icon" onClick={() => onEdit(inc)} title="Edit Stream" aria-label="Edit">
+                  <Edit3 size={15} />
                 </button>
-                <button className="btn-icon delete" onClick={() => onDelete(inc.id)} title="Delete Stream">
-                  <Trash2 size={16} />
+                <button className="btn-icon delete" onClick={() => onDelete(inc.id)} title="Delete Stream" aria-label="Delete">
+                  <Trash2 size={15} />
                 </button>
               </div>
             </div>
