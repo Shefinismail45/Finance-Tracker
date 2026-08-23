@@ -2,7 +2,7 @@ import { supabase, isLiveSupabaseConfigured } from './supabaseClient';
 
 // Helper to determine if current session is a local demo user
 export function isDemoSession(userId) {
-  return !userId || userId.startsWith('00000000-') || userId === 'demo-user-12345';
+  return !userId || userId.startsWith('00000000-');
 }
 
 // Helper to get active user ID
@@ -431,6 +431,10 @@ export const api = {
       }
       return list.sort((a, b) => new Date(b.start_date) - new Date(a.start_date));
     }
+  },
+
+  getIncome: async (params = {}) => {
+    return api.getIncomes(params);
   },
 
   getIncomeSummary: async () => {

@@ -24,23 +24,20 @@ class LocalDemoSupabaseClient {
       getUser: async () => {
         const stored = localStorage.getItem('pft_demo_user');
         if (stored) {
-          return { data: { user: JSON.parse(stored) }, error: null };
+          try {
+            return { data: { user: JSON.parse(stored) }, error: null };
+          } catch (e) {}
         }
-        const defaultUser = {
-          id: 'demo-user-12345',
-          email: 'demo@financetracker.io',
-          user_metadata: { name: 'Alex Johnson' }
-        };
-        localStorage.setItem('pft_demo_user', JSON.stringify(defaultUser));
-        return { data: { user: defaultUser }, error: null };
+        return { data: { user: null }, error: null };
       },
       getSession: async () => {
         const { data } = await this.auth.getUser();
+        if (!data?.user) return { data: { session: null }, error: null };
         return { data: { session: { user: data.user, access_token: 'demo-token' } }, error: null };
       },
       signUp: async ({ email, password, options }) => {
         const user = {
-          id: 'user-' + Math.random().toString(36).substring(2, 9),
+          id: '00000000-0000-0000-0000-' + Math.random().toString(36).substring(2, 14).padEnd(12, '0'),
           email,
           user_metadata: options?.data || { name: email.split('@')[0] }
         };
@@ -49,7 +46,7 @@ class LocalDemoSupabaseClient {
       },
       signInWithPassword: async ({ email, password }) => {
         const user = {
-          id: 'user-' + Math.random().toString(36).substring(2, 9),
+          id: '00000000-0000-0000-0000-' + Math.random().toString(36).substring(2, 14).padEnd(12, '0'),
           email,
           user_metadata: { name: email.split('@')[0] }
         };

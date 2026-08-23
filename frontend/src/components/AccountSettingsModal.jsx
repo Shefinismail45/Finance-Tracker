@@ -32,22 +32,23 @@ export function AccountSettingsModal({ user, onClose, onLogout, onDataReset, onO
   const handleExportData = async () => {
     try {
       setStatusMessage('Exporting data...');
+      setError(null);
       const [exp, inc, deb, sav, bud] = await Promise.all([
-        api.getExpenses().catch(() => []),
-        api.getIncome().catch(() => []),
-        api.getDebts().catch(() => []),
-        api.getSavingsGoals().catch(() => []),
-        api.getBudgets().catch(() => [])
+        api.getExpenses().catch(err => { console.warn('Export expenses error:', err); return []; }),
+        api.getIncomes().catch(err => { console.warn('Export incomes error:', err); return []; }),
+        api.getDebts().catch(err => { console.warn('Export debts error:', err); return []; }),
+        api.getSavingsGoals().catch(err => { console.warn('Export savings error:', err); return []; }),
+        api.getBudgets().catch(err => { console.warn('Export budgets error:', err); return []; })
       ]);
 
       const backup = {
         exported_at: new Date().toISOString(),
         user: { name: userName, email: userEmail },
-        expenses: exp,
-        incomes: inc,
-        debts: deb,
-        savings_goals: sav,
-        budgets: bud
+        expenses: exp || [],
+        incomes: inc || [],
+        debts: deb || [],
+        savings_goals: sav || [],
+        budgets: bud || []
       };
 
       const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
@@ -55,12 +56,15 @@ export function AccountSettingsModal({ user, onClose, onLogout, onDataReset, onO
       const a = document.createElement('a');
       a.href = url;
       a.download = `finance_tracker_backup_${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
       setStatusMessage('Data exported successfully!');
       setTimeout(() => setStatusMessage(null), 3000);
     } catch (err) {
-      setError('Failed to export data.');
+      console.error('Export Data Error:', err);
+      setError(err.message || 'Failed to export data.');
     }
   };
 
