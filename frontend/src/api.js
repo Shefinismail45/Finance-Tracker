@@ -1,4 +1,4 @@
-import { supabase, isLiveSupabaseConfigured } from './supabaseClient';
+import { supabase, isLiveSupabaseConfigured } from './supabaseClient.js';
 
 // Helper to determine if current session is a local demo user
 export function isDemoSession(userId) {
@@ -51,6 +51,7 @@ const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
 
 // Initial mock data if storage is empty
 function getLocalStore(key, defaultVal) {
+  if (typeof localStorage === 'undefined') return defaultVal;
   const data = localStorage.getItem(`pft_${key}`);
   if (data) {
     try { return JSON.parse(data); } catch (e) { return defaultVal; }
@@ -60,11 +61,12 @@ function getLocalStore(key, defaultVal) {
 }
 
 function setLocalStore(key, val) {
+  if (typeof localStorage === 'undefined') return;
   localStorage.setItem(`pft_${key}`, JSON.stringify(val));
 }
 
 // Initialize seed data
-if (!localStorage.getItem('pft_initialized')) {
+if (typeof localStorage !== 'undefined' && !localStorage.getItem('pft_initialized')) {
   setLocalStore('categories', DEFAULT_CATEGORIES);
   setLocalStore('expenses', [
     {
