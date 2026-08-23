@@ -26,6 +26,7 @@ import { BudgetForm } from './components/BudgetForm';
 import { SearchModal } from './components/SearchModal';
 import { NotificationsModal } from './components/NotificationsModal';
 import { AccountSettingsModal } from './components/AccountSettingsModal';
+import { FinancialReportModal } from './components/FinancialReportModal';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'expense' | 'income' | 'debt' | 'savings' | 'budget'
@@ -37,6 +38,7 @@ export default function App() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   const handleSelectCurrency = (newCurr) => {
     setCurrency(newCurr);
@@ -426,6 +428,7 @@ export default function App() {
             <DashboardView 
               onNavigate={(tab) => { setActiveTab(tab); setIsFormOpen(false); }}
               onOpenForm={(tab) => { setActiveTab(tab); setEditingItem(null); setIsFormOpen(true); }}
+              onOpenReport={() => setIsReportModalOpen(true)}
               currency={currency}
             />
           )}
@@ -629,6 +632,16 @@ export default function App() {
           onClose={() => setIsAccountModalOpen(false)}
           onLogout={handleLogout}
           onDataReset={loadData}
+          onOpenReport={() => setIsReportModalOpen(true)}
+        />
+      )}
+
+      {/* Visual Financial Report Modal (JPG Download) */}
+      {isReportModalOpen && (
+        <FinancialReportModal
+          user={user}
+          currency={currency}
+          onClose={() => setIsReportModalOpen(false)}
         />
       )}
     </div>

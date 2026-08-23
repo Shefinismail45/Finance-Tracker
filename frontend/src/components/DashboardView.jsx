@@ -7,17 +7,22 @@ import {
   Receipt, 
   Banknote, 
   PiggyBank, 
-  Sparkles
+  Sparkles,
+  FileImage,
+  Quote,
+  ArrowUpRight
 } from 'lucide-react';
 import { api } from '../api';
 import { getCurrencySymbol } from '../currencies';
+import { getRandomQuote } from '../quotes';
 import { DashboardSkeleton } from './Skeleton';
 
-export function DashboardView({ onNavigate, onOpenForm, currency = 'USD' }) {
+export function DashboardView({ onNavigate, onOpenForm, onOpenReport, currency = 'USD' }) {
   const [forecastDays, setForecastDays] = useState(30);
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [quote] = useState(() => getRandomQuote());
 
   const currSymbol = getCurrencySymbol(currency);
 
@@ -63,9 +68,33 @@ export function DashboardView({ onNavigate, onOpenForm, currency = 'USD' }) {
       <div className="hero-balance-card">
         <div className="hero-label">
           <span>Executive Net Worth • {currency}</span>
-          <span style={{ fontSize: '0.75rem', background: 'rgba(255, 255, 255, 0.15)', padding: '0.2rem 0.6rem', borderRadius: '9999px', color: '#ffffff' }}>
-            Live Stock Metric
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {onOpenReport && (
+              <button
+                onClick={onOpenReport}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  border: '1px solid rgba(255, 255, 255, 0.35)',
+                  color: 'white',
+                  padding: '0.25rem 0.65rem',
+                  borderRadius: '9999px',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                title="Download full summary report as high-res JPG"
+              >
+                <FileImage size={13} /> Visual Report (JPG)
+              </button>
+            )}
+            <span style={{ fontSize: '0.75rem', background: 'rgba(255, 255, 255, 0.15)', padding: '0.2rem 0.6rem', borderRadius: '9999px', color: '#ffffff' }}>
+              Live Stock Metric
+            </span>
+          </div>
         </div>
 
         <div className="hero-amount">
@@ -132,6 +161,42 @@ export function DashboardView({ onNavigate, onOpenForm, currency = 'USD' }) {
           </button>
         </div>
       </div>
+
+      {/* MOTIVATIONAL QUOTE BANNER */}
+      {quote && (
+        <div style={{
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border-color)',
+          borderRadius: '1rem',
+          padding: '0.9rem 1.25rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.85rem',
+          boxShadow: 'var(--card-shadow)'
+        }}>
+          <div style={{
+            width: '2.2rem',
+            height: '2.2rem',
+            borderRadius: '50%',
+            background: 'var(--bg-subtle)',
+            color: 'var(--primary)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0
+          }}>
+            <Quote size={15} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: '0.86rem', fontStyle: 'italic', color: 'var(--text-primary)', lineHeight: 1.4 }}>
+              "{quote.quote}"
+            </div>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.15rem', fontWeight: 600 }}>
+              — {quote.author} <span style={{ opacity: 0.6 }}>• {quote.tag}</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 2. DESKTOP GRID: MONTHLY FLOW & CASH FORECAST */}
       <div className="grid-2-col">

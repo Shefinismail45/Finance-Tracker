@@ -15,7 +15,7 @@ import {
 import { api } from '../api';
 import { supabase } from '../supabaseClient';
 
-export function AccountSettingsModal({ user, onClose, onLogout, onDataReset }) {
+export function AccountSettingsModal({ user, onClose, onLogout, onDataReset, onOpenReport }) {
   const [activeTab, setActiveTab] = useState('profile'); // 'profile' | 'danger'
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
@@ -199,8 +199,18 @@ export function AccountSettingsModal({ user, onClose, onLogout, onDataReset }) {
             {/* Data Actions */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
               <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.04em' }}>
-                Data Management
+                Data Management & Reports
               </div>
+
+              {onOpenReport && (
+                <button 
+                  className="btn-primary" 
+                  onClick={() => { onClose(); onOpenReport(); }}
+                  style={{ width: '100%', justifyContent: 'center', padding: '0.65rem', fontSize: '0.85rem' }}
+                >
+                  <Download size={16} /> Download Visual Report (JPG Image)
+                </button>
+              )}
 
               <button 
                 className="btn-secondary" 
