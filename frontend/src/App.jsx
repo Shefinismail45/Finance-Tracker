@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Plus, Wallet } from 'lucide-react';
 import { api } from './api';
 import { supabase } from './supabaseClient';
@@ -45,6 +45,13 @@ export default function App() {
     localStorage.setItem('pft_currency', newCurr);
   };
 
+  // Sort States per Screen
+  const [expenseSort, setExpenseSort] = useState('date_desc');
+  const [incomeSort, setIncomeSort] = useState('date_desc');
+  const [debtSort, setDebtSort] = useState('avalanche');
+  const [savingsSort, setSavingsSort] = useState('amount_desc');
+  const [budgetSort, setBudgetSort] = useState('amount_desc');
+
   // Expense State
   const [expenseCategories, setExpenseCategories] = useState([]);
   const [expenseTotals, setExpenseTotals] = useState([]);
@@ -76,6 +83,62 @@ export default function App() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [error, setError] = useState(null);
+
+  // Sorted list views for instant client-side ordering
+  const sortedExpenses = useMemo(() => {
+    return [...expenses].sort((a, b) => {
+      if (expenseSort === 'date_desc') return new Date(b.occurred_at) - new Date(a.occurred_at);
+      if (expenseSort === 'date_asc') return new Date(a.occurred_at) - new Date(b.occurred_at);
+      if (expenseSort === 'amount_desc') return Number(b.amount) - Number(a.amount);
+      if (expenseSort === 'amount_asc') return Number(a.amount) - Number(b.amount);
+      return 0;
+    });
+  }, [expenses, expenseSort]);
+
+  const sortedIncomes = useMemo(() => {
+    return [...incomes].sort((a, b) => {
+      if (incomeSort === 'date_desc') return new Date(b.start_date || 0) - new Date(a.start_date || 0);
+      if (incomeSort === 'date_asc') return new Date(a.start_date || 0) - new Date(b.start_date || 0);
+      if (incomeSort === 'amount_desc') return Number(b.amount) - Number(a.amount);
+      if (incomeSort === 'amount_asc') return Number(a.amount) - Number(b.amount);
+      return 0;
+    });
+  }, [incomes, incomeSort]);
+
+  const sortedDebts = useMemo(() => {
+    return [...debts].sort((a, b) => {
+      if (debtSort === 'avalanche') {
+        if (a.is_paid_off !== b.is_paid_off) return a.is_paid_off ? 1 : -1;
+        if (Number(b.interest_rate) !== Number(a.interest_rate)) return Number(b.interest_rate) - Number(a.interest_rate);
+        return Number(b.remaining_balance) - Number(a.remaining_balance);
+      }
+      if (debtSort === 'amount_desc') return Number(b.remaining_balance) - Number(a.remaining_balance);
+      if (debtSort === 'amount_asc') return Number(a.remaining_balance) - Number(b.remaining_balance);
+      if (debtSort === 'date_desc') return new Date(b.start_date || 0) - new Date(a.start_date || 0);
+      if (debtSort === 'date_asc') return new Date(a.start_date || 0) - new Date(b.start_date || 0);
+      return 0;
+    });
+  }, [debts, debtSort]);
+
+  const sortedSavingsGoals = useMemo(() => {
+    return [...savingsGoals].sort((a, b) => {
+      if (savingsSort === 'amount_desc') return Number(b.total_saved) - Number(a.total_saved);
+      if (savingsSort === 'amount_asc') return Number(a.total_saved) - Number(b.total_saved);
+      if (savingsSort === 'date_desc') return new Date(b.start_date || 0) - new Date(a.start_date || 0);
+      if (savingsSort === 'date_asc') return new Date(a.start_date || 0) - new Date(b.start_date || 0);
+      return 0;
+    });
+  }, [savingsGoals, savingsSort]);
+
+  const sortedBudgets = useMemo(() => {
+    return [...budgets].sort((a, b) => {
+      if (budgetSort === 'amount_desc') return Number(b.planned_amount) - Number(a.planned_amount);
+      if (budgetSort === 'amount_asc') return Number(a.planned_amount) - Number(b.planned_amount);
+      if (budgetSort === 'usage_desc') return Number(b.usage_percent || 0) - Number(a.usage_percent || 0);
+      if (budgetSort === 'name_asc') return (a.category_name || '').localeCompare(b.category_name || '');
+      return 0;
+    });
+  }, [budgets, budgetSort]);
 
   // Initialize theme on document element
   useEffect(() => {
@@ -440,10 +503,12 @@ export default function App() {
                 selectedCategoryId={selectedExpenseCatId}
                 onSelectCategory={(id) => setSelectedExpenseCatId(id)}
                 currency={currency}
+                currentSort={expenseSort}
+                onSortChange={(s) => setExpenseSort(s)}
               />
 
               <ExpenseList
-                expenses={expenses}
+                expenses={sortedExpenses}
                 onEdit={(exp) => { setEditingItem(exp); setIsFormOpen(true); }}
                 onDelete={handleDeleteExpense}
                 onAddNew={() => { setEditingItem(null); setIsFormOpen(true); }}
@@ -460,10 +525,12 @@ export default function App() {
                 selectedCategoryId={selectedIncomeCatId}
                 onSelectCategory={(id) => setSelectedIncomeCatId(id)}
                 currency={currency}
+                currentSort={incomeSort}
+                onSortChange={(s) => setIncomeSort(s)}
               />
 
               <IncomeList
-                incomes={incomes}
+                incomes={sortedIncomes}
                 onEdit={(inc) => { setEditingItem(inc); setIsFormOpen(true); }}
                 onDelete={handleDeleteIncome}
                 onAddNew={() => { setEditingItem(null); setIsFormOpen(true); }}
@@ -480,10 +547,12 @@ export default function App() {
                 activeFilter={debtFilter}
                 onSelectFilter={(f) => setDebtFilter(f)}
                 currency={currency}
+                currentSort={debtSort}
+                onSortChange={(s) => setDebtSort(s)}
               />
 
               <DebtList
-                debts={debts}
+                debts={sortedDebts}
                 onEdit={(d) => { setEditingItem(d); setIsFormOpen(true); }}
                 onDelete={handleDeleteDebt}
                 onLogPayment={(d) => setPaymentDebtTarget(d)}
@@ -497,10 +566,15 @@ export default function App() {
 
           {activeTab === 'savings' && (
             <>
-              <SavingsSummaryBar summary={savingsSummary} currency={currency} />
+              <SavingsSummaryBar 
+                summary={savingsSummary} 
+                currency={currency}
+                currentSort={savingsSort}
+                onSortChange={(s) => setSavingsSort(s)}
+              />
 
               <SavingsList
-                goals={savingsGoals}
+                goals={sortedSavingsGoals}
                 onEdit={(g) => { setEditingItem(g); setIsFormOpen(true); }}
                 onDelete={handleDeleteSavingsGoal}
                 onLogDeposit={(g) => setContributionGoalTarget(g)}
@@ -514,12 +588,14 @@ export default function App() {
 
           {activeTab === 'budget' && (
             <BudgetList
-              budgets={budgets}
+              budgets={sortedBudgets}
               onEdit={(b) => { setEditingItem(b); setIsFormOpen(true); }}
               onDelete={handleDeleteBudget}
               onAddNew={() => { setEditingItem(null); setIsFormOpen(true); }}
               currency={currency}
               loading={loading}
+              currentSort={budgetSort}
+              onSortChange={(s) => setBudgetSort(s)}
             />
           )}
         </main>

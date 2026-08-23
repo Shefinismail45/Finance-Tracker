@@ -1,13 +1,21 @@
 import React from 'react';
 import { getCurrencySymbol } from '../currencies';
-import { Banknote, Repeat, Layers } from 'lucide-react';
+import { Banknote, Repeat } from 'lucide-react';
+import { SortControl } from './SortControl';
 
-export function IncomeSummaryBar({ summary, selectedCategoryId, onSelectCategory, currency = 'USD' }) {
+export function IncomeSummaryBar({ summary, selectedCategoryId, onSelectCategory, currency = 'USD', currentSort, onSortChange }) {
   const currSymbol = getCurrencySymbol(currency);
   const totalReceived = Number(summary?.total_received || 0);
   const totalMonthly = Number(summary?.total_monthly_income || 0);
   const totalCount = summary?.total_streams_count || 0;
   const categories = summary?.categories || [];
+
+  const sortOptions = [
+    { key: 'date_desc', label: 'Newest First' },
+    { key: 'date_asc', label: 'Oldest First' },
+    { key: 'amount_desc', label: 'Amount: High to Low' },
+    { key: 'amount_asc', label: 'Amount: Low to High' }
+  ];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', marginBottom: '1.25rem' }}>
@@ -64,24 +72,34 @@ export function IncomeSummaryBar({ summary, selectedCategoryId, onSelectCategory
         </div>
       </div>
 
-      {/* Category Filter Chips */}
-      <div className="filter-chips-bar" style={{ margin: 0 }}>
-        <button
-          className={`filter-chip ${selectedCategoryId === null ? 'active' : ''}`}
-          onClick={() => onSelectCategory(null)}
-        >
-          All Streams ({currSymbol}{totalReceived.toLocaleString(undefined, { minimumFractionDigits: 2 })})
-        </button>
-
-        {categories.map((cat) => (
+      {/* Category Filter Chips & Sort Control Row */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap' }}>
+        <div className="filter-chips-bar" style={{ margin: 0, flex: 1, minWidth: '220px' }}>
           <button
-            key={cat.category_id}
-            className={`filter-chip ${selectedCategoryId === cat.category_id ? 'active' : ''}`}
-            onClick={() => onSelectCategory(cat.category_id)}
+            className={`filter-chip ${selectedCategoryId === null ? 'active' : ''}`}
+            onClick={() => onSelectCategory(null)}
           >
-            {cat.category_name} ({currSymbol}{Number(cat.total_received).toLocaleString(undefined, { minimumFractionDigits: 2 })})
+            All Streams ({currSymbol}{totalReceived.toLocaleString(undefined, { minimumFractionDigits: 2 })})
           </button>
-        ))}
+
+          {categories.map((cat) => (
+            <button
+              key={cat.category_id}
+              className={`filter-chip ${selectedCategoryId === cat.category_id ? 'active' : ''}`}
+              onClick={() => onSelectCategory(cat.category_id)}
+            >
+              {cat.category_name} ({currSymbol}{Number(cat.total_received).toLocaleString(undefined, { minimumFractionDigits: 2 })})
+            </button>
+          ))}
+        </div>
+
+        {onSortChange && (
+          <SortControl
+            options={sortOptions}
+            currentSort={currentSort || 'date_desc'}
+            onSortChange={onSortChange}
+          />
+        )}
       </div>
     </div>
   );

@@ -1,35 +1,62 @@
 import React from 'react';
 import { Trash2, Edit3, AlertTriangle, PieChart, Sparkles, Plus } from 'lucide-react';
 import { getRandomQuote } from '../quotes';
+import { getCurrencySymbol } from '../currencies';
 import { BudgetSkeleton } from './Skeleton';
 import { BudgetSplitAdvisor } from './BudgetSplitAdvisor';
+import { SortControl } from './SortControl';
 
-export function BudgetList({ budgets, onEdit, onDelete, onAddNew, currency = 'USD', loading }) {
+export function BudgetList({ budgets, onEdit, onDelete, onAddNew, currency = 'USD', loading, currentSort, onSortChange }) {
   if (loading) {
     return <BudgetSkeleton count={3} />;
   }
 
   const quote = getRandomQuote(4);
+  const currSymbol = getCurrencySymbol(currency);
   const overallPlanned = budgets.reduce((sum, b) => sum + Number(b.planned_amount || 0), 0);
   const overallActual = budgets.reduce((sum, b) => sum + Number(b.actual_amount || 0), 0);
+
+  const sortOptions = [
+    { key: 'amount_desc', label: 'Limit: High to Low' },
+    { key: 'amount_asc', label: 'Limit: Low to High' },
+    { key: 'usage_desc', label: 'Over Budget / Most Spent' },
+    { key: 'name_asc', label: 'Category: A to Z' }
+  ];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       {/* 1. Smart Budget Split Frameworks Advisor (e.g. 50/30/20, 70/20/10, 80/20) */}
       <BudgetSplitAdvisor currency={currency} />
 
-      {/* 2. Overall Summary Bar */}
+      {/* 2. Overall Summary Bar & Sort Control */}
       {budgets.length > 0 && (
-        <div className="glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.25rem' }}>
-          <div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Planned Budget</div>
-            <div style={{ fontWeight: 800, fontSize: '1.35rem', color: 'var(--text-primary)', marginTop: '0.1rem' }}>${overallPlanned.toFixed(2)}</div>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Current Month Actual Spend</div>
-            <div style={{ fontWeight: 800, fontSize: '1.35rem', color: overallActual > overallPlanned ? 'var(--danger)' : 'var(--success)', marginTop: '0.1rem' }}>
-              ${overallActual.toFixed(2)}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+          <div className="glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.25rem' }}>
+            <div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Planned Budget</div>
+              <div style={{ fontWeight: 800, fontSize: '1.35rem', color: 'var(--text-primary)', marginTop: '0.1rem' }}>
+                {currSymbol}{overallPlanned.toFixed(2)}
+              </div>
             </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Current Month Actual Spend</div>
+              <div style={{ fontWeight: 800, fontSize: '1.35rem', color: overallActual > overallPlanned ? 'var(--danger)' : 'var(--success)', marginTop: '0.1rem' }}>
+                {currSymbol}{overallActual.toFixed(2)}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
+              Category Budgets ({budgets.length})
+            </div>
+            {onSortChange && (
+              <SortControl
+                options={sortOptions}
+                currentSort={currentSort || 'amount_desc'}
+                onSortChange={onSortChange}
+              />
+            )}
           </div>
         </div>
       )}
@@ -94,21 +121,21 @@ export function BudgetList({ budgets, onEdit, onDelete, onAddNew, currency = 'US
                       </span>
                       {isOver && (
                         <span style={{ fontSize: '0.72rem', background: 'var(--danger-bg)', color: 'var(--danger-text)', padding: '0.15rem 0.5rem', borderRadius: '0.375rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 2 }}>
-                          <AlertTriangle size={12} /> Over Budget (+${Number(b.overage).toFixed(2)})
+                          <AlertTriangle size={12} /> Over Budget (+{currSymbol}{Number(b.overage).toFixed(2)})
                         </span>
                       )}
                     </div>
                     <div className="row-subtitle" style={{ marginTop: '0.35rem' }}>
-                      <span>Budget Limit: ${Number(b.planned_amount).toFixed(2)} {b.currency}</span>
+                      <span>Budget Limit: {currSymbol}{Number(b.planned_amount).toFixed(2)} {b.currency || currency}</span>
                     </div>
                   </div>
 
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: '1.35rem', fontWeight: 800, color: isOver ? 'var(--danger)' : 'var(--success)' }}>
-                      ${Number(b.actual_amount).toFixed(2)}
+                      {currSymbol}{Number(b.actual_amount).toFixed(2)}
                     </div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                      {isOver ? `$${Number(b.overage).toFixed(2)} exceeded` : `$${Number(b.remaining_budget).toFixed(2)} available`}
+                      {isOver ? `${currSymbol}${Number(b.overage).toFixed(2)} exceeded` : `${currSymbol}${Number(b.remaining_budget).toFixed(2)} available`}
                     </div>
                   </div>
                 </div>
