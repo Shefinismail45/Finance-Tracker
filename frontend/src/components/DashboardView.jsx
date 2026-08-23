@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   TrendingUp, 
+  TrendingDown,
   Shield, 
   CreditCard, 
   PieChart, 
@@ -10,7 +11,10 @@ import {
   Sparkles,
   FileImage,
   Quote,
-  ArrowUpRight
+  ArrowUpRight,
+  CheckCircle2,
+  AlertCircle,
+  Scale
 } from 'lucide-react';
 import { api } from '../api';
 import { getCurrencySymbol } from '../currencies';
@@ -53,6 +57,7 @@ export function DashboardView({ onNavigate, onOpenForm, onOpenReport, currency =
   }
 
   const stock = dashboardData?.stock;
+  const thisMonth = dashboardData?.this_month_flow;
   const flow = dashboardData?.flow;
   const forecast = dashboardData?.forecast;
   const budgets = dashboardData?.budgets_overview;
@@ -64,10 +69,10 @@ export function DashboardView({ onNavigate, onOpenForm, onOpenReport, currency =
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       
-      {/* 1. HERO BALANCE CARD (Original Layout with Reference Cobalt / Glow Palette) */}
+      {/* 1. NET WORTH HERO BALANCE CARD */}
       <div className="hero-balance-card">
         <div className="hero-label">
-          <span>Executive Net Worth • {currency}</span>
+          <span>Net Worth • {currency}</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             {onOpenReport && (
               <button
@@ -92,7 +97,7 @@ export function DashboardView({ onNavigate, onOpenForm, onOpenReport, currency =
               </button>
             )}
             <span style={{ fontSize: '0.75rem', background: 'rgba(255, 255, 255, 0.15)', padding: '0.2rem 0.6rem', borderRadius: '9999px', color: '#ffffff' }}>
-              Live Stock Metric
+              All-Time Position
             </span>
           </div>
         </div>
@@ -162,6 +167,119 @@ export function DashboardView({ onNavigate, onOpenForm, onOpenReport, currency =
         </div>
       </div>
 
+      {/* =========================================================================
+          2. THIS MONTH'S CASH FLOW: "DID I EARN MORE THAN I SPENT THIS MONTH?"
+          Plain, conversational, and instantly understandable
+          ========================================================================= */}
+      <div className="glass-card" style={{
+        position: 'relative',
+        overflow: 'hidden',
+        border: thisMonth?.is_surplus 
+          ? '1px solid rgba(16, 185, 129, 0.35)' 
+          : thisMonth?.is_deficit 
+          ? '1px solid rgba(239, 68, 68, 0.35)' 
+          : '1px solid var(--border-color)',
+        background: 'var(--bg-card)'
+      }}>
+        {/* Top Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.15rem' }}>
+          <div>
+            <div style={{ fontSize: '1.05rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.45rem', color: 'var(--text-primary)' }}>
+              <span>📅 This Month at a Glance</span>
+            </div>
+            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
+              Real cash earned vs real cash spent in {thisMonth?.month_name || 'this month'} {thisMonth?.year || ''}
+            </div>
+          </div>
+
+          <div style={{
+            fontSize: '0.78rem',
+            fontWeight: 800,
+            padding: '0.3rem 0.75rem',
+            borderRadius: '9999px',
+            background: thisMonth?.is_surplus ? 'var(--success-bg)' : thisMonth?.is_deficit ? 'var(--danger-bg)' : 'var(--bg-subtle)',
+            color: thisMonth?.is_surplus ? 'var(--success-text)' : thisMonth?.is_deficit ? 'var(--danger-text)' : 'var(--text-secondary)',
+            border: thisMonth?.is_surplus ? '1px solid rgba(16, 185, 129, 0.25)' : thisMonth?.is_deficit ? '1px solid rgba(239, 68, 68, 0.25)' : '1px solid var(--border-color)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.35rem'
+          }}>
+            <span>{thisMonth?.is_surplus ? '🟢' : thisMonth?.is_deficit ? '🔴' : '⚪'}</span>
+            <span>{thisMonth?.is_surplus ? 'Surplus' : thisMonth?.is_deficit ? 'Deficit' : 'Balanced'}</span>
+          </div>
+        </div>
+
+        {/* Highlight Banner with Plain Language */}
+        <div style={{
+          background: thisMonth?.is_surplus 
+            ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.14) 0%, rgba(5, 150, 105, 0.06) 100%)' 
+            : thisMonth?.is_deficit 
+            ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.14) 0%, rgba(220, 38, 38, 0.06) 100%)' 
+            : 'var(--bg-subtle)',
+          padding: '1.15rem 1.25rem',
+          borderRadius: '1rem',
+          border: thisMonth?.is_surplus 
+            ? '1px solid rgba(16, 185, 129, 0.25)' 
+            : thisMonth?.is_deficit 
+            ? '1px solid rgba(239, 68, 68, 0.25)' 
+            : '1px solid var(--border-color)',
+          marginBottom: '1.15rem'
+        }}>
+          <div style={{ fontSize: '0.76rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700, color: thisMonth?.is_surplus ? 'var(--success-text)' : thisMonth?.is_deficit ? 'var(--danger-text)' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 5 }}>
+            {thisMonth?.is_surplus ? <TrendingUp size={14} /> : thisMonth?.is_deficit ? <TrendingDown size={14} /> : <Scale size={14} />}
+            {thisMonth?.is_surplus ? 'Monthly Cash Surplus' : thisMonth?.is_deficit ? 'Monthly Cash Deficit' : 'Balanced Flow'}
+          </div>
+
+          <div style={{
+            fontSize: '2rem',
+            fontWeight: 900,
+            color: thisMonth?.is_surplus ? 'var(--success-text)' : thisMonth?.is_deficit ? 'var(--danger-text)' : 'var(--text-primary)',
+            letterSpacing: '-0.02em',
+            margin: '0.35rem 0'
+          }}>
+            {thisMonth?.is_surplus ? '+' : thisMonth?.is_deficit ? '-' : ''}{currSymbol}{Number(thisMonth?.abs_difference || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </div>
+
+          {/* Plain, warm conversational message */}
+          <div style={{ fontSize: '0.92rem', fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.45 }}>
+            {thisMonth?.is_surplus ? (
+              <span>🎉 <strong>You saved {currSymbol}{Number(thisMonth?.abs_difference || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })} this month!</strong> You earned more than you spent.</span>
+            ) : thisMonth?.is_deficit ? (
+              <span>⚠️ <strong>You spent {currSymbol}{Number(thisMonth?.abs_difference || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })} more than you earned this month.</strong></span>
+            ) : (
+              <span>⚖️ <strong>You broke even this month.</strong> Your income and spending are currently equal.</span>
+            )}
+          </div>
+        </div>
+
+        {/* Side-by-side Actual Inflow vs Actual Spending Pills */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
+          <div style={{ background: 'var(--bg-subtle)', padding: '0.9rem 1rem', borderRadius: '0.85rem', border: '1px solid var(--border-color)' }}>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
+              <Banknote size={14} color="var(--success)" /> Earned This Month
+            </div>
+            <div style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--success)', marginTop: '0.25rem' }}>
+              +{currSymbol}{Number(thisMonth?.actual_income || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            </div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+              Real inflows received in {thisMonth?.month_name}
+            </div>
+          </div>
+
+          <div style={{ background: 'var(--bg-subtle)', padding: '0.9rem 1rem', borderRadius: '0.85rem', border: '1px solid var(--border-color)' }}>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
+              <Receipt size={14} color="var(--danger)" /> Spent This Month
+            </div>
+            <div style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--danger)', marginTop: '0.25rem' }}>
+              -{currSymbol}{Number(thisMonth?.actual_expense || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            </div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+              {thisMonth?.month_expenses_count || 0} expenses recorded
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* MOTIVATIONAL QUOTE BANNER */}
       {quote && (
         <div style={{
@@ -198,18 +316,18 @@ export function DashboardView({ onNavigate, onOpenForm, onOpenReport, currency =
         </div>
       )}
 
-      {/* 2. DESKTOP GRID: MONTHLY FLOW & CASH FORECAST */}
+      {/* 3. DESKTOP GRID: MONTHLY CADENCE & CASH FORECAST */}
       <div className="grid-2-col">
         
-        {/* Monthly Inflow / Outflow Summary */}
+        {/* Normalized Recurring Cadence */}
         <div className="glass-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
             <div>
               <div style={{ fontSize: '1rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Sparkles size={18} color="var(--primary)" /> Monthly Flow Overview
+                <Sparkles size={18} color="var(--primary)" /> Normalized Monthly Cadence
               </div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>
-                Normalized recurring cadence vs actuals
+                Smoothed recurring baseline vs actuals
               </div>
             </div>
 
@@ -221,7 +339,7 @@ export function DashboardView({ onNavigate, onOpenForm, onOpenReport, currency =
               padding: '0.25rem 0.6rem', 
               borderRadius: '9999px' 
             }}>
-              Savings Rate: {flow?.planned_savings_rate_pct}%
+              Savings Target Rate: {flow?.planned_savings_rate_pct}%
             </div>
           </div>
 
@@ -234,16 +352,16 @@ export function DashboardView({ onNavigate, onOpenForm, onOpenReport, currency =
             </div>
 
             <div style={{ background: 'var(--bg-subtle)', padding: '0.875rem', borderRadius: '0.75rem' }}>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>Actual Monthly Spend</div>
-              <div style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--danger)', marginTop: '0.2rem' }}>
-                -{currSymbol}{Number(flow?.actual_expense || 0).toFixed(2)}
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>Planned Savings</div>
+              <div style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--primary)', marginTop: '0.2rem' }}>
+                +{currSymbol}{Number(flow?.planned_savings || 0).toFixed(2)}
               </div>
             </div>
           </div>
 
           <div style={{ marginTop: '0.875rem', padding: '0.875rem 1rem', background: flow?.net_monthly_flow >= 0 ? 'var(--success-bg)' : 'var(--danger-bg)', borderRadius: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ fontSize: '0.85rem', fontWeight: 700, color: flow?.net_monthly_flow >= 0 ? 'var(--success-text)' : 'var(--danger-text)' }}>
-              Net Monthly Cash Surplus
+              Normalized Baseline Flow
             </div>
             <div style={{ fontSize: '1.25rem', fontWeight: 800, color: flow?.net_monthly_flow >= 0 ? 'var(--success-text)' : 'var(--danger-text)' }}>
               {flow?.net_monthly_flow >= 0 ? '+' : ''}{currSymbol}{Number(flow?.net_monthly_flow || 0).toFixed(2)}

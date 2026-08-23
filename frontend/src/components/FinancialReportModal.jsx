@@ -29,7 +29,7 @@ export function FinancialReportModal({ user, currency = 'USD', onClose }) {
   const reportCardRef = useRef(null);
   const currSymbol = getCurrencySymbol(currency);
 
-  const userName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Executive Member';
+  const userName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'User';
   const userEmail = user?.email || '';
 
   // Fetch report metrics according to chosen period
@@ -260,7 +260,7 @@ export function FinancialReportModal({ user, currency = 'USD', onClose }) {
                 <span style={{ fontSize: '1.15rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#ffffff' }}>FinanceTracker</span>
               </div>
               <div style={{ fontSize: '0.82rem', color: '#94a3b8', marginTop: '0.2rem' }}>
-                Executive Financial Report • <strong style={{ color: '#cbd5e1' }}>{userName}</strong>
+                Financial Summary Report • <strong style={{ color: '#cbd5e1' }}>{userName}</strong>
               </div>
             </div>
 
@@ -293,7 +293,7 @@ export function FinancialReportModal({ user, currency = 'USD', onClose }) {
             textAlign: 'center'
           }}>
             <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#94a3b8', fontWeight: 700 }}>
-              Estimated Executive Net Worth ({currency})
+              Estimated Net Worth ({currency})
             </div>
             <div style={{ fontSize: '2.35rem', fontWeight: 900, color: '#ffffff', letterSpacing: '-0.03em', margin: '0.35rem 0' }}>
               {reportData?.netWorth < 0 ? '-' : ''}{currSymbol}{Math.abs(Number(reportData?.netWorth || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}

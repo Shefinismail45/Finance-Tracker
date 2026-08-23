@@ -1074,15 +1074,16 @@ export const api = {
   },
 
   // ==========================================
-  // EXECUTIVE DASHBOARD COMPILATION
+  // DASHBOARD COMPILATION
   // ==========================================
   getDashboard: async (days = 30) => {
-    const [savingsSum, debtSum, incomeSum, expenses, budgets] = await Promise.all([
+    const [savingsSum, debtSum, incomeSum, expenses, budgets, incomes] = await Promise.all([
       api.getSavingsSummary(),
       api.getDebtSummary(),
       api.getIncomeSummary(),
       api.getExpenses(),
-      api.getBudgets()
+      api.getBudgets(),
+      api.getIncome()
     ]);
 
     // 1. Stock Metric: Point-in-time Net Worth
@@ -1094,27 +1095,76 @@ export const api = {
       as_of_date: new Date().toISOString().slice(0, 10)
     };
 
-    // 2. Flow Metric: Current Month Spend vs Income & Planned Savings Rate
+    // 2. This Month's Actual Cash Flow (Did I earn more than I spent this month?)
     const now = new Date();
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+
+    // Actual Expenses in current calendar month
     const monthExpenses = expenses.filter(e => {
-      const d = new Date(e.occurred_at);
+      const d = new Date(e.occurred_at || e.created_at);
       return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
     });
-    const actualExpense = Math.round(monthExpenses.reduce((sum, e) => sum + Number(e.amount), 0) * 100) / 100;
+    const actualMonthExpense = Math.round(monthExpenses.reduce((sum, e) => sum + Number(e.converted_amount || e.amount || 0), 0) * 100) / 100;
+
+    // Actual Income in current calendar month (One-time inflows in this month + active recurring streams for this month)
+    let actualMonthIncome = 0;
+    incomes.forEach(i => {
+      const amt = Number(i.converted_amount || i.amount || 0);
+      const isOneTime = Number(i.period_months) === 0;
+      if (isOneTime) {
+        if (i.start_date) {
+          const d = new Date(i.start_date);
+          if (d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()) {
+            actualMonthIncome += amt;
+          }
+        }
+      } else {
+        if (i.is_active !== false) {
+          const startDate = new Date(i.start_date);
+          const endDate = i.end_date ? new Date(i.end_date) : null;
+          if (startDate <= currentMonthEnd && (!endDate || endDate >= currentMonthStart)) {
+            const monthlyPortion = Number(i.monthly_equivalent || (amt / (i.period_months || 1)));
+            actualMonthIncome += monthlyPortion;
+          }
+        }
+      }
+    });
+    actualMonthIncome = Math.round(actualMonthIncome * 100) / 100;
+
+    const thisMonthDifference = Math.round((actualMonthIncome - actualMonthExpense) * 100) / 100;
+    const isSurplus = thisMonthDifference > 0;
+    const isDeficit = thisMonthDifference < 0;
+
+    const this_month_flow = {
+      month_name: now.toLocaleString('default', { month: 'long' }),
+      year: now.getFullYear(),
+      actual_income: actualMonthIncome,
+      actual_expense: actualMonthExpense,
+      difference: thisMonthDifference,
+      abs_difference: Math.abs(thisMonthDifference),
+      is_surplus: isSurplus,
+      is_deficit: isDeficit,
+      is_even: thisMonthDifference === 0,
+      status_label: isSurplus ? 'Surplus' : isDeficit ? 'Deficit' : 'Balanced',
+      month_expenses_count: monthExpenses.length
+    };
+
+    // 3. Flow Metric: Normalized / Smoothed Monthly Cadence
     const normalizedIncome = incomeSum.total_monthly_income;
     const plannedSavings = savingsSum.total_planned_monthly_savings;
     const plannedSavingsRate = normalizedIncome > 0 ? Math.round((plannedSavings / normalizedIncome) * 1000) / 10 : 0;
-    const netMonthlyFlow = Math.round((normalizedIncome - actualExpense) * 100) / 100;
+    const netMonthlyFlow = Math.round((normalizedIncome - actualMonthExpense) * 100) / 100;
 
     const flow = {
       normalized_income: normalizedIncome,
-      actual_expense: actualExpense,
+      actual_expense: actualMonthExpense,
       planned_savings: plannedSavings,
       planned_savings_rate_pct: plannedSavingsRate,
       net_monthly_flow: netMonthlyFlow
     };
 
-    // 3. Forecast Metric: 30 / 90 Days
+    // 4. Forecast Metric: 30 / 90 Days
     const dailyInflow = normalizedIncome / 30.44;
     const recurringExpenses = expenses.filter(e => e.is_recurring);
     const dailyRecurringOutflow = (recurringExpenses.reduce((sum, e) => sum + Number(e.amount), 0) + plannedSavings) / 30.44;
@@ -1129,11 +1179,12 @@ export const api = {
       projected_net_cash_flow: projectedNet
     };
 
-    // 4. Budgets Adherence
+    // 5. Budgets Adherence
     const overBudgetCount = budgets.filter(b => b.is_over_budget).length;
 
     return {
       stock,
+      this_month_flow,
       flow,
       forecast,
       budgets_overview: {
