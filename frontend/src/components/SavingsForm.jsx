@@ -101,10 +101,47 @@ export function SavingsForm({ initialData, onSubmit, onClose, submitting }) {
 
           <div className="form-group">
             <label>Goal Category / Custom Tag</label>
+            <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
+              {['Emergency', 'Family', 'Travel', 'Retirement', 'Housing', 'Vehicle'].map((tag) => (
+                <button
+                  type="button"
+                  key={tag}
+                  onClick={() => setCustomCategory(tag)}
+                  style={{
+                    fontSize: '0.75rem',
+                    padding: '0.2rem 0.6rem',
+                    borderRadius: '9999px',
+                    border: customCategory === tag ? '1px solid var(--primary)' : '1px solid var(--border-color)',
+                    background: customCategory === tag ? 'var(--primary-gradient)' : 'var(--bg-subtle)',
+                    color: customCategory === tag ? '#ffffff' : 'var(--text-secondary)',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  {tag}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setCustomCategory('')}
+                style={{
+                  fontSize: '0.75rem',
+                  padding: '0.2rem 0.6rem',
+                  borderRadius: '9999px',
+                  border: '1px dashed var(--border-color)',
+                  background: 'transparent',
+                  color: 'var(--text-muted)',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                + Other Custom...
+              </button>
+            </div>
             <input
               type="text"
               className="form-control"
-              placeholder="e.g. Emergency, Travel, Investment, Housing, Tech"
+              placeholder="e.g. Emergency, Family, Travel, Education, Tech"
               value={customCategory}
               onChange={(e) => setCustomCategory(e.target.value)}
             />

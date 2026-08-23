@@ -325,6 +325,7 @@ INSERT INTO public.categories (user_id, kind, name, icon) VALUES
     -- Default Expense Categories
     (NULL, 'expense', 'Housing & Rent', 'home'),
     (NULL, 'expense', 'Groceries & Food', 'shopping-cart'),
+    (NULL, 'expense', 'Family', 'users'),
     (NULL, 'expense', 'Utilities & Bills', 'zap'),
     (NULL, 'expense', 'Transportation', 'car'),
     (NULL, 'expense', 'Dining & Entertainment', 'coffee'),

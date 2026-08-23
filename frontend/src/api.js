@@ -29,6 +29,7 @@ const DEFAULT_CATEGORIES = [
   // Expense Categories
   { id: '00000000-0000-0000-0001-000000000001', user_id: null, kind: 'expense', name: 'Housing & Rent', icon: 'home', is_system_default: true },
   { id: '00000000-0000-0000-0001-000000000002', user_id: null, kind: 'expense', name: 'Groceries & Food', icon: 'shopping-cart', is_system_default: true },
+  { id: '00000000-0000-0000-0001-000000000011', user_id: null, kind: 'expense', name: 'Family', icon: 'users', is_system_default: true },
   { id: '00000000-0000-0000-0001-000000000003', user_id: null, kind: 'expense', name: 'Utilities & Bills', icon: 'zap', is_system_default: true },
   { id: '00000000-0000-0000-0001-000000000004', user_id: null, kind: 'expense', name: 'Transportation', icon: 'car', is_system_default: true },
   { id: '00000000-0000-0000-0001-000000000005', user_id: null, kind: 'expense', name: 'Dining & Entertainment', icon: 'coffee', is_system_default: true },
@@ -247,15 +248,34 @@ export const api = {
   // ==========================================
   getCategories: async (kind) => {
     const userId = await getActiveUserId();
+    const isOther = (name) => /^other/i.test(name?.trim() || '');
+
+    const sortCategories = (cats) => {
+      return cats.slice().sort((a, b) => {
+        const aIsOther = isOther(a.name);
+        const bIsOther = isOther(b.name);
+        if (aIsOther && !bIsOther) return 1;
+        if (!aIsOther && bIsOther) return -1;
+
+        // Default categories come before custom categories
+        if (a.is_system_default && !b.is_system_default) return -1;
+        if (!a.is_system_default && b.is_system_default) return 1;
+
+        return a.name.localeCompare(b.name);
+      });
+    };
+
     if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       let query = supabase.from('categories').select('*').or(`user_id.eq.${userId},user_id.is.null`);
       if (kind) query = query.eq('kind', kind);
-      const { data, error } = await query.order('name');
+      const { data, error } = await query;
       if (error) throw error;
-      return data.map(c => ({ ...c, is_system_default: c.user_id === null }));
+      const mapped = data.map(c => ({ ...c, is_system_default: c.user_id === null }));
+      return sortCategories(mapped);
     } else {
       const cats = getLocalStore('categories', DEFAULT_CATEGORIES);
-      return cats.filter(c => (!kind || c.kind === kind) && (c.user_id === null || c.user_id === userId));
+      const filtered = cats.filter(c => (!kind || c.kind === kind) && (c.user_id === null || c.user_id === userId));
+      return sortCategories(filtered);
     }
   },
 
