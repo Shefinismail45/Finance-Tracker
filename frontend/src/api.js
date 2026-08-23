@@ -439,12 +439,38 @@ export const api = {
 
   getIncomeSummary: async () => {
     const incomes = await api.getIncomes();
-    const activeIncomes = incomes.filter(i => i.is_active);
+    const totalReceived = incomes.reduce((acc, i) => acc + Number(i.converted_amount || i.amount || 0), 0);
+    const activeIncomes = incomes.filter(i => i.is_active !== false);
     const recurringActive = activeIncomes.filter(i => Number(i.period_months) > 0);
-    const totalMonthly = recurringActive.reduce((acc, i) => acc + (Number(i.amount) / (Number(i.period_months) || 1)), 0);
+    const totalMonthly = recurringActive.reduce((acc, i) => acc + (Number(i.converted_amount || i.amount || 0) / (Number(i.period_months) || 1)), 0);
+
+    const catMap = {};
+    incomes.forEach(i => {
+      const catId = i.category_id || 'other';
+      const catName = i.category_name || 'Income Stream';
+      if (!catMap[catId]) {
+        catMap[catId] = {
+          category_id: i.category_id,
+          category_name: catName,
+          total_received: 0,
+          monthly_amount: 0,
+          count: 0
+        };
+      }
+      const amt = Number(i.converted_amount || i.amount || 0);
+      catMap[catId].total_received += amt;
+      catMap[catId].count += 1;
+      if (i.is_active !== false && Number(i.period_months) > 0) {
+        catMap[catId].monthly_amount += (amt / (Number(i.period_months) || 1));
+      }
+    });
+
     return {
+      total_received: Math.round(totalReceived * 100) / 100,
       total_monthly_income: Math.round(totalMonthly * 100) / 100,
-      active_streams_count: activeIncomes.length
+      active_streams_count: activeIncomes.length,
+      total_streams_count: incomes.length,
+      categories: Object.values(catMap)
     };
   },
 

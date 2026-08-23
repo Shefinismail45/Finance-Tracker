@@ -1,14 +1,16 @@
 import React from 'react';
 import { Trash2, Edit3, Plus, History, PiggyBank, Target, Sparkles } from 'lucide-react';
 import { getRandomQuote } from '../quotes';
+import { getCurrencySymbol } from '../currencies';
 import { CardSkeleton } from './Skeleton';
 
-export function SavingsList({ goals, onEdit, onDelete, onLogDeposit, onViewHistory, onAddNew, loading }) {
+export function SavingsList({ goals, onEdit, onDelete, onLogDeposit, onViewHistory, onAddNew, loading, currency = 'USD' }) {
   if (loading) {
     return <CardSkeleton count={3} />;
   }
 
   const quote = getRandomQuote(0);
+  const currSymbol = getCurrencySymbol(currency);
 
   if (goals.length === 0) {
     return (
@@ -84,7 +86,7 @@ export function SavingsList({ goals, onEdit, onDelete, onLogDeposit, onViewHisto
                 </div>
                 <div className="row-subtitle" style={{ marginTop: '0.35rem' }}>
                   <span>
-                    Commitment: ${Number(g.contribution_amount).toFixed(2)}{' '}
+                    Commitment: {currSymbol}{Number(g.contribution_amount).toFixed(2)}{' '}
                     {Number(g.period_months) === 0
                       ? '(One-time lump sum)'
                       : g.period_months === 1
@@ -97,10 +99,10 @@ export function SavingsList({ goals, onEdit, onDelete, onLogDeposit, onViewHisto
 
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--success)' }}>
-                  ${totalSaved.toFixed(2)}
+                  {currSymbol}{totalSaved.toFixed(2)}
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                  {hasTarget ? `of $${targetAmount.toFixed(2)} target` : 'Open-ended buffer'}
+                  {hasTarget ? `of ${currSymbol}${targetAmount.toFixed(2)} target` : 'Open-ended buffer'}
                 </div>
               </div>
             </div>
@@ -127,7 +129,7 @@ export function SavingsList({ goals, onEdit, onDelete, onLogDeposit, onViewHisto
                   <Plus size={14} /> Deposit
                 </button>
 
-                <button className="btn-secondary" onClick={() => onViewHistory(g)} title="Deposit Log" style={{ padding: '0.35rem 0.6rem', fontSize: '0.8rem' }}>
+                <button className="btn-secondary" onClick={() => onViewHistory(g)} title="View Contribution Log" style={{ padding: '0.35rem 0.6rem', fontSize: '0.8rem' }}>
                   <History size={14} style={{ marginRight: '0.25rem', display: 'inline' }} /> History
                 </button>
 

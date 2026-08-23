@@ -1,6 +1,8 @@
 import React from 'react';
+import { getCurrencySymbol } from '../currencies';
 
-export function SavingsSummaryBar({ summary }) {
+export function SavingsSummaryBar({ summary, currency = 'USD' }) {
+  const currSymbol = getCurrencySymbol(currency);
   const totalSaved = Number(summary?.total_saved || 0);
   const plannedMonthly = Number(summary?.total_planned_monthly_savings || 0);
   const activeCount = summary?.active_goal_count || 0;
@@ -9,11 +11,11 @@ export function SavingsSummaryBar({ summary }) {
   return (
     <div className="filter-chips-bar" style={{ marginBottom: '1.25rem' }}>
       <div className="filter-chip active" style={{ cursor: 'default' }}>
-        Total Saved: ${totalSaved.toFixed(2)}
+        Total Saved: {currSymbol}{totalSaved.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
       </div>
 
       <div className="filter-chip" style={{ cursor: 'default' }}>
-        Monthly Commitment: ${plannedMonthly.toFixed(2)}/mo
+        Monthly Commitment: {currSymbol}{plannedMonthly.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/mo
       </div>
 
       <div className="filter-chip" style={{ cursor: 'default' }}>

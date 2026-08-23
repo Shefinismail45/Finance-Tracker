@@ -1,24 +1,26 @@
 import React from 'react';
-import { Trash2, Edit3, Repeat, Receipt, Tag, Quote, Plus } from 'lucide-react';
+import { Trash2, Edit3, Receipt, Repeat, Plus } from 'lucide-react';
 import { getRandomQuote } from '../quotes';
+import { getCurrencySymbol } from '../currencies';
 import { ListSkeleton } from './Skeleton';
 
-export function ExpenseList({ expenses, onEdit, onDelete, onAddNew, loading }) {
+export function ExpenseList({ expenses, onEdit, onDelete, onAddNew, loading, currency = 'USD' }) {
   if (loading) {
     return <ListSkeleton count={4} />;
   }
 
   const quote = getRandomQuote(1);
+  const currSymbol = getCurrencySymbol(currency);
 
   if (expenses.length === 0) {
     return (
       <div className="empty-state">
-        <div style={{ width: '3.25rem', height: '3.25rem', borderRadius: '50%', background: 'var(--danger-bg)', color: 'var(--danger)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="row-icon-circle expense" style={{ width: '3.25rem', height: '3.25rem' }}>
           <Receipt size={26} />
         </div>
         <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)' }}>No expenses logged yet</div>
-        <div style={{ fontSize: '0.88rem', color: 'var(--text-muted)', maxWidth: '420px' }}>Record your daily expenses, bills, and purchases to track your spending habits.</div>
-
+        <div style={{ fontSize: '0.88rem', color: 'var(--text-muted)', maxWidth: '400px' }}>Track your daily groceries, bills, housing, and shopping expenses.</div>
+        
         {onAddNew && (
           <button
             className="btn-primary"
@@ -81,10 +83,10 @@ export function ExpenseList({ expenses, onEdit, onDelete, onAddNew, loading }) {
             <div className="row-right">
               <div>
                 <div className="row-amount expense">
-                  -${Number(exp.amount).toFixed(2)}
+                  -{currSymbol}{Number(exp.amount).toFixed(2)}
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                  {exp.currency}
+                  {exp.currency || currency}
                 </div>
               </div>
 

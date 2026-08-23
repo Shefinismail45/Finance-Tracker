@@ -439,6 +439,7 @@ export default function App() {
                 totals={expenseTotals}
                 selectedCategoryId={selectedExpenseCatId}
                 onSelectCategory={(id) => setSelectedExpenseCatId(id)}
+                currency={currency}
               />
 
               <ExpenseList
@@ -447,6 +448,7 @@ export default function App() {
                 onDelete={handleDeleteExpense}
                 onAddNew={() => { setEditingItem(null); setIsFormOpen(true); }}
                 loading={loading}
+                currency={currency}
               />
             </>
           )}
@@ -457,6 +459,7 @@ export default function App() {
                 summary={incomeSummary}
                 selectedCategoryId={selectedIncomeCatId}
                 onSelectCategory={(id) => setSelectedIncomeCatId(id)}
+                currency={currency}
               />
 
               <IncomeList
@@ -465,6 +468,7 @@ export default function App() {
                 onDelete={handleDeleteIncome}
                 onAddNew={() => { setEditingItem(null); setIsFormOpen(true); }}
                 loading={loading}
+                currency={currency}
               />
             </>
           )}
@@ -475,6 +479,7 @@ export default function App() {
                 summary={debtSummary}
                 activeFilter={debtFilter}
                 onSelectFilter={(f) => setDebtFilter(f)}
+                currency={currency}
               />
 
               <DebtList
@@ -485,13 +490,14 @@ export default function App() {
                 onViewHistory={(d) => setPaymentDebtTarget(d)}
                 onAddNew={() => { setEditingItem(null); setIsFormOpen(true); }}
                 loading={loading}
+                currency={currency}
               />
             </>
           )}
 
           {activeTab === 'savings' && (
             <>
-              <SavingsSummaryBar summary={savingsSummary} />
+              <SavingsSummaryBar summary={savingsSummary} currency={currency} />
 
               <SavingsList
                 goals={savingsGoals}
@@ -501,6 +507,7 @@ export default function App() {
                 onViewHistory={(g) => setContributionGoalTarget(g)}
                 onAddNew={() => { setEditingItem(null); setIsFormOpen(true); }}
                 loading={loading}
+                currency={currency}
               />
             </>
           )}

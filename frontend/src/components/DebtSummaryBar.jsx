@@ -1,6 +1,8 @@
 import React from 'react';
+import { getCurrencySymbol } from '../currencies';
 
-export function DebtSummaryBar({ summary, activeFilter, onSelectFilter }) {
+export function DebtSummaryBar({ summary, activeFilter, onSelectFilter, currency = 'USD' }) {
+  const currSymbol = getCurrencySymbol(currency);
   const remaining = Number(summary?.total_remaining || 0);
   const paid = Number(summary?.total_paid || 0);
   const activeCount = summary?.active_debt_count || 0;
@@ -12,7 +14,7 @@ export function DebtSummaryBar({ summary, activeFilter, onSelectFilter }) {
         className={`filter-chip ${activeFilter === null ? 'active' : ''}`}
         onClick={() => onSelectFilter(null)}
       >
-        All Debts (${remaining.toFixed(2)} remaining)
+        All Debts ({currSymbol}{remaining.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} remaining)
       </button>
 
       <button

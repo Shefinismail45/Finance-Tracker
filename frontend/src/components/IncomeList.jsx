@@ -1,14 +1,16 @@
 import React from 'react';
 import { Trash2, Edit3, Banknote, Plus } from 'lucide-react';
 import { getRandomQuote } from '../quotes';
+import { getCurrencySymbol } from '../currencies';
 import { ListSkeleton } from './Skeleton';
 
-export function IncomeList({ incomes, onEdit, onDelete, onAddNew, loading }) {
+export function IncomeList({ incomes, onEdit, onDelete, onAddNew, loading, currency = 'USD' }) {
   if (loading) {
     return <ListSkeleton count={3} />;
   }
 
   const quote = getRandomQuote(2);
+  const currSymbol = getCurrencySymbol(currency);
 
   if (incomes.length === 0) {
     return (
@@ -105,10 +107,10 @@ export function IncomeList({ incomes, onEdit, onDelete, onAddNew, loading }) {
             <div className="row-right">
               <div>
                 <div className="row-amount income">
-                  +${Number(inc.amount).toFixed(2)}
+                  +{currSymbol}{Number(inc.amount).toFixed(2)}
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                  {isOneTime ? 'One-time inflow' : `≈ $${monthlyAmt.toFixed(2)}/mo`}
+                  {isOneTime ? 'One-time inflow' : `≈ ${currSymbol}${monthlyAmt.toFixed(2)}/mo`}
                 </div>
               </div>
 

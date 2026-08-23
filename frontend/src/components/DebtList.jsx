@@ -1,14 +1,16 @@
 import React from 'react';
 import { Trash2, Edit3, DollarSign, History, CheckCircle2, CreditCard, ShieldAlert, Plus } from 'lucide-react';
 import { getRandomQuote } from '../quotes';
+import { getCurrencySymbol } from '../currencies';
 import { CardSkeleton } from './Skeleton';
 
-export function DebtList({ debts, onEdit, onDelete, onLogPayment, onViewHistory, onAddNew, loading }) {
+export function DebtList({ debts, onEdit, onDelete, onLogPayment, onViewHistory, onAddNew, loading, currency = 'USD' }) {
   if (loading) {
     return <CardSkeleton count={3} />;
   }
 
   const quote = getRandomQuote(3);
+  const currSymbol = getCurrencySymbol(currency);
 
   if (debts.length === 0) {
     return (
@@ -61,30 +63,24 @@ export function DebtList({ debts, onEdit, onDelete, onLogPayment, onViewHistory,
 
   const renderDebtCard = (debt, isMuted = false) => {
     const badge = getDebtBadge(debt);
-    const progressPct = Math.min(100, Math.round((Number(debt.total_paid || 0) / Number(debt.principal_amount)) * 100));
+    const progressPct = Math.min(100, Math.round((Number(debt.total_paid || 0) / Number(debt.principal_amount || 1)) * 100));
 
     return (
-      <div
-        key={debt.id}
-        className="glass-card"
-        style={{
-          padding: '1.25rem',
-          opacity: isMuted ? 0.75 : 1,
-          borderLeft: isMuted ? '4px solid var(--success)' : '4px solid var(--danger)'
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.75rem' }}>
+      <div key={debt.id} className="glass-card" style={{ opacity: isMuted ? 0.75 : 1, padding: '1.25rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '1.1rem', fontWeight: 800, textDecoration: isMuted ? 'line-through' : 'none' }}>
-                {debt.name}
-              </span>
-              <span style={{ fontSize: '0.72rem', background: badge.bg, color: badge.color, padding: '0.15rem 0.5rem', borderRadius: '0.375rem', fontWeight: 700 }}>
+              <span style={{ fontSize: '1.1rem', fontWeight: 800 }}>{debt.name}</span>
+              <span style={{ fontSize: '0.7rem', background: badge.bg, color: badge.color, padding: '0.15rem 0.5rem', borderRadius: '0.25rem', fontWeight: 700 }}>
                 {badge.label}
               </span>
-              {Number(debt.interest_rate) > 0 && (
-                <span style={{ fontSize: '0.72rem', background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', padding: '0.15rem 0.5rem', borderRadius: '0.375rem', fontWeight: 700 }}>
+              {Number(debt.interest_rate) > 0 ? (
+                <span style={{ fontSize: '0.7rem', background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', padding: '0.15rem 0.5rem', borderRadius: '0.25rem', fontWeight: 700 }}>
                   {debt.interest_rate}% APR
+                </span>
+              ) : (
+                <span style={{ fontSize: '0.7rem', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', padding: '0.15rem 0.5rem', borderRadius: '0.25rem', fontWeight: 700 }}>
+                  0% Interest
                 </span>
               )}
             </div>
@@ -96,10 +92,10 @@ export function DebtList({ debts, onEdit, onDelete, onLogPayment, onViewHistory,
 
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: '1.35rem', fontWeight: 800, color: isMuted ? 'var(--success)' : 'var(--danger)' }}>
-              {isMuted ? 'PAID OFF 🎉' : `$${Number(debt.remaining_balance).toFixed(2)}`}
+              {isMuted ? 'PAID OFF 🎉' : `${currSymbol}${Number(debt.remaining_balance).toFixed(2)}`}
             </div>
             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-              {isMuted ? `$${Number(debt.total_paid).toFixed(2)} settled` : `of $${Number(debt.principal_amount).toFixed(2)} principal`}
+              {isMuted ? `${currSymbol}${Number(debt.total_paid).toFixed(2)} settled` : `of ${currSymbol}${Number(debt.principal_amount).toFixed(2)} principal`}
             </div>
           </div>
         </div>
@@ -145,27 +141,23 @@ export function DebtList({ debts, onEdit, onDelete, onLogPayment, onViewHistory,
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-      {/* Active Debts in Avalanche Order */}
+      {/* Active Debts (Avalanche Priority) */}
       {activeDebts.length > 0 && (
-        <div>
-          <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <ShieldAlert size={16} color="#ef4444" /> Active Debts — Debt Avalanche Priority (Highest APR First)
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <ShieldAlert size={16} color="var(--danger)" /> ACTIVE DEBTS ({activeDebts.length}) • Avalanche Order
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
-            {activeDebts.map((d) => renderDebtCard(d, false))}
-          </div>
+          {activeDebts.map((d) => renderDebtCard(d, false))}
         </div>
       )}
 
-      {/* Paid-off Debts */}
+      {/* Paid Off Debts */}
       {paidOffDebts.length > 0 && (
-        <div style={{ marginTop: '0.5rem' }}>
-          <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--success)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <CheckCircle2 size={16} /> Paid Off & Settled ({paidOffDebts.length})
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.5rem' }}>
+          <div style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--success)', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <CheckCircle2 size={16} /> COMPLETED / PAID OFF ({paidOffDebts.length})
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
-            {paidOffDebts.map((d) => renderDebtCard(d, true))}
-          </div>
+          {paidOffDebts.map((d) => renderDebtCard(d, true))}
         </div>
       )}
     </div>
