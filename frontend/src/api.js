@@ -281,21 +281,59 @@ export const api = {
 
   createCategory: async ({ name, kind, icon = 'tag' }) => {
     const userId = await getActiveUserId();
+    const trimmed = name.trim();
+
     if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
+      // 1. Check if a category with this exact name (case-insensitive) already exists for this user or as a default
+      const { data: existing } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('kind', kind)
+        .ilike('name', trimmed)
+        .or(`user_id.eq.${userId},user_id.is.null`);
+
+      if (existing && existing.length > 0) {
+        // Return existing custom category for this user if exists, or system default
+        const match = existing.find(c => c.name.toLowerCase() === trimmed.toLowerCase() && c.user_id === userId) ||
+                      existing.find(c => c.name.toLowerCase() === trimmed.toLowerCase());
+        if (match) {
+          return { ...match, is_system_default: match.user_id === null };
+        }
+      }
+
+      // 2. If no existing match, insert a new user-owned custom category
       const { data, error } = await supabase.from('categories').insert([{
         user_id: userId,
-        name: name.trim(),
+        name: trimmed,
         kind,
         icon
       }]).select().single();
-      if (error) throw error;
+
+      if (error) {
+        if (error.code === '23505') {
+          // Unique constraint fallback
+          const { data: fallback } = await supabase
+            .from('categories')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('kind', kind)
+            .ilike('name', trimmed)
+            .single();
+          if (fallback) return { ...fallback, is_system_default: false };
+        }
+        throw error;
+      }
       return { ...data, is_system_default: false };
     } else {
       const cats = getLocalStore('categories', DEFAULT_CATEGORIES);
+      const match = cats.find(c => c.kind === kind && (c.user_id === null || c.user_id === userId) && c.name.toLowerCase() === trimmed.toLowerCase());
+      if (match) {
+        return match;
+      }
       const newCat = {
         id: '00000000-0000-0000-0001-' + Math.random().toString(36).substring(2, 14).padEnd(12, '0'),
         user_id: userId,
-        name: name.trim(),
+        name: trimmed,
         kind,
         icon,
         is_system_default: false

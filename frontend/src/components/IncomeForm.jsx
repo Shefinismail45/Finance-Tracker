@@ -2,8 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { X, PlusCircle } from 'lucide-react';
 import { api } from '../api';
 
-export function IncomeForm({ categories, initialData, onSubmit, onClose, submitting }) {
-  const [categoryId, setCategoryId] = useState(initialData?.category_id || categories[0]?.id || '');
+export function IncomeForm({ categories = [], initialData, onSubmit, onClose, submitting }) {
+  // Only display system default categories in the picker (hide one-off user custom categories)
+  const defaultCategories = categories.filter(c => c.is_system_default);
+
+  const [categoryId, setCategoryId] = useState(
+    initialData?.category_id || defaultCategories[0]?.id || (categories.length > 0 ? categories[0].id : '')
+  );
   const [isCreatingCustomCat, setIsCreatingCustomCat] = useState(false);
   const [customCategoryName, setCustomCategoryName] = useState('');
 
@@ -30,8 +35,8 @@ export function IncomeForm({ categories, initialData, onSubmit, onClose, submitt
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (categories.length > 0 && !categoryId && !isCreatingCustomCat) {
-      setCategoryId(categories[0].id);
+    if (defaultCategories.length > 0 && !categoryId && !isCreatingCustomCat) {
+      setCategoryId(defaultCategories[0].id);
     }
   }, [categories]);
 
@@ -154,20 +159,26 @@ export function IncomeForm({ categories, initialData, onSubmit, onClose, submitt
             </div>
           </div>
 
-          {/* Category Dropdown with Universal "Other" Option */}
+          {/* Category Dropdown: System Defaults Only + Add Custom / Other at Bottom */}
           <div className="form-group">
             <label>Income Source / Category</label>
             <select
               className="form-control"
-              value={categoryId}
+              value={isCreatingCustomCat ? '__custom_new__' : categoryId}
               onChange={handleCategorySelectChange}
               required
             >
-              {categories.map((cat) => (
+              {defaultCategories.map((cat) => (
                 <option key={cat.id} value={cat.id}>
-                  {cat.name} {cat.is_system_default ? '(Default)' : '(Custom)'}
+                  {cat.name}
                 </option>
               ))}
+              {/* If editing an income stream that has a custom category */}
+              {initialData?.category_id && !defaultCategories.some(c => c.id === initialData.category_id) && initialData?.category_name && (
+                <option value={initialData.category_id}>
+                  {initialData.category_name} (Custom)
+                </option>
+              )}
               <option value="__custom_new__">✨ + Add Custom / Other Source...</option>
             </select>
 

@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 
-export function BudgetForm({ categories, initialData, onSubmit, onClose, submitting }) {
-  const [categoryId, setCategoryId] = useState(initialData?.category_id || categories[0]?.id || '');
+export function BudgetForm({ categories = [], initialData, onSubmit, onClose, submitting }) {
+  const defaultCategories = categories.filter(c => c.is_system_default);
+  const [categoryId, setCategoryId] = useState(
+    initialData?.category_id || defaultCategories[0]?.id || (categories.length > 0 ? categories[0].id : '')
+  );
   const [plannedAmount, setPlannedAmount] = useState(initialData?.planned_amount ? String(initialData.planned_amount) : '');
   
   // Recurring vs One-Time Budget Cap
@@ -21,8 +24,8 @@ export function BudgetForm({ categories, initialData, onSubmit, onClose, submitt
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (categories.length > 0 && !categoryId) {
-      setCategoryId(categories[0].id);
+    if (defaultCategories.length > 0 && !categoryId) {
+      setCategoryId(defaultCategories[0].id);
     }
   }, [categories]);
 
@@ -77,11 +80,16 @@ export function BudgetForm({ categories, initialData, onSubmit, onClose, submitt
               disabled={!!initialData}
               required
             >
-              {categories.map((cat) => (
+              {defaultCategories.map((cat) => (
                 <option key={cat.id} value={cat.id}>
                   {cat.name}
                 </option>
               ))}
+              {initialData?.category_id && !defaultCategories.some(c => c.id === initialData.category_id) && initialData?.category_name && (
+                <option value={initialData.category_id}>
+                  {initialData.category_name} (Custom)
+                </option>
+              )}
             </select>
           </div>
 
