@@ -21,10 +21,10 @@ export function SearchModal({ onClose, onNavigate, currency = 'USD' }) {
       try {
         setLoading(true);
         const [exp, inc, deb, sav] = await Promise.all([
-          api.getExpenses().catch(() => []),
-          api.getIncomes().catch(() => []),
-          api.getDebts().catch(() => []),
-          api.getSavingsGoals().catch(() => [])
+          api.getExpenses({}, currency).catch(() => []),
+          api.getIncomes({}, currency).catch(() => []),
+          api.getDebts({}, currency).catch(() => []),
+          api.getSavingsGoals({}, currency).catch(() => [])
         ]);
         setExpenses(exp || []);
         setIncomes(inc || []);
@@ -35,7 +35,7 @@ export function SearchModal({ onClose, onNavigate, currency = 'USD' }) {
       }
     };
     loadAll();
-  }, []);
+  }, [currency]);
 
   // Keyboard shortcut listener: Escape key closes search overlay
   useEffect(() => {

@@ -11,9 +11,16 @@ STATIC_USD_RATES = {
     "EUR": Decimal("0.92"),
     "GBP": Decimal("0.79"),
     "INR": Decimal("83.50"),
+    "AED": Decimal("3.6725"),  # Pegged to USD: 1 USD = 3.6725 AED
+    "SAR": Decimal("3.75"),    # Pegged to USD: 1 USD = 3.75 SAR
+    "QAR": Decimal("3.64"),    # Pegged to USD: 1 USD = 3.64 QAR
+    "KWD": Decimal("0.307"),
     "CAD": Decimal("1.36"),
     "AUD": Decimal("1.51"),
-    "JPY": Decimal("155.0")
+    "SGD": Decimal("1.34"),
+    "JPY": Decimal("155.0"),
+    "CHF": Decimal("0.90"),
+    "UAH": Decimal("41.0")
 }
 
 # In-memory cache for live fetched rates

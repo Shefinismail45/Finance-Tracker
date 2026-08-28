@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, Suspense, lazy } from
 import { Plus, Wallet } from 'lucide-react';
 import { api } from './api';
 import { supabase } from './supabaseClient';
+import { fetchLiveExchangeRates } from './currencies';
 import { SidebarNav } from './components/SidebarNav';
 import { TopNavbar } from './components/TopNavbar';
 import { BottomNav } from './components/BottomNav';
@@ -178,9 +179,12 @@ export default function App() {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   };
 
-  // Auth State Detection on Mount
+  // Auth State Detection & Exchange Rate initialization on Mount
   useEffect(() => {
     let mounted = true;
+
+    // Refresh live exchange rates in background
+    fetchLiveExchangeRates().catch(() => {});
 
     // Safety timeout: Never leave the user waiting if network request hangs
     const safetyTimer = setTimeout(() => {
@@ -251,8 +255,8 @@ export default function App() {
       if (activeTab === 'expense') {
         const [catsRes, totalsRes, expsRes] = await Promise.all([
           api.getCategories('expense'),
-          api.getCategoryTotals(),
-          api.getExpenses(selectedExpenseCatId ? { category_id: selectedExpenseCatId } : {})
+          api.getCategoryTotals(currency),
+          api.getExpenses(selectedExpenseCatId ? { category_id: selectedExpenseCatId } : {}, currency)
         ]);
         setExpenseCategories(catsRes);
         setExpenseTotals(totalsRes);
@@ -260,30 +264,30 @@ export default function App() {
       } else if (activeTab === 'income') {
         const [catsRes, summaryRes, incsRes] = await Promise.all([
           api.getCategories('income'),
-          api.getIncomeSummary(),
-          api.getIncomes(selectedIncomeCatId ? { category_id: selectedIncomeCatId } : {})
+          api.getIncomeSummary(currency),
+          api.getIncomes(selectedIncomeCatId ? { category_id: selectedIncomeCatId } : {}, currency)
         ]);
         setIncomeCategories(catsRes);
         setIncomeSummary(summaryRes);
         setIncomes(incsRes);
       } else if (activeTab === 'debt') {
         const [summaryRes, debtsRes] = await Promise.all([
-          api.getDebtSummary(),
-          api.getDebts(debtFilter ? { status_filter: debtFilter } : {})
+          api.getDebtSummary(currency),
+          api.getDebts(debtFilter ? { status_filter: debtFilter } : {}, currency)
         ]);
         setDebtSummary(summaryRes);
         setDebts(debtsRes);
       } else if (activeTab === 'savings') {
         const [summaryRes, goalsRes] = await Promise.all([
-          api.getSavingsSummary(),
-          api.getSavingsGoals()
+          api.getSavingsSummary(currency),
+          api.getSavingsGoals({}, currency)
         ]);
         setSavingsSummary(summaryRes);
         setSavingsGoals(goalsRes);
       } else if (activeTab === 'budget') {
         const [catsRes, budgetsRes] = await Promise.all([
           api.getCategories('expense'),
-          api.getBudgets()
+          api.getBudgets(currency)
         ]);
         setExpenseCategories(catsRes);
         setBudgets(budgetsRes);
@@ -294,7 +298,7 @@ export default function App() {
     } finally {
       setLoading(false);
     }
-  }, [activeTab, selectedExpenseCatId, selectedIncomeCatId, debtFilter, user]);
+  }, [activeTab, selectedExpenseCatId, selectedIncomeCatId, debtFilter, user, currency]);
 
   useEffect(() => {
     if (user) {
@@ -544,6 +548,7 @@ export default function App() {
                 onNavigate={(tab) => { setActiveTab(tab); setIsFormOpen(false); }}
                 onOpenForm={(tab) => { setActiveTab(tab); setEditingItem(null); setIsFormOpen(true); }}
                 onOpenReport={() => setIsReportModalOpen(true)}
+                onOpenAccount={() => setIsAccountModalOpen(true)}
                 currency={currency}
               />
             )}

@@ -36,7 +36,7 @@ export function IncomeSummaryBar({ summary, selectedCategoryId, onSelectCategory
         }}>
           <div>
             <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: 4 }}>
-              <Banknote size={14} color="var(--success)" /> Total Received (All Time)
+              <Banknote size={14} color="var(--success)" /> Total Income Received (All Time)
             </div>
             <div style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--success)', marginTop: '0.2rem' }}>
               +{currSymbol}{totalReceived.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -60,7 +60,7 @@ export function IncomeSummaryBar({ summary, selectedCategoryId, onSelectCategory
         }}>
           <div>
             <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: 4 }}>
-              <Repeat size={14} color="var(--primary)" /> Recurring Baseline
+              <Repeat size={14} color="var(--primary)" /> Recurring Monthly Baseline
             </div>
             <div style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '0.2rem' }}>
               ≈ {currSymbol}{totalMonthly.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}<span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>/mo</span>

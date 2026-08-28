@@ -1,8 +1,35 @@
 import { supabase, isLiveSupabaseConfigured } from './supabaseClient.js';
+import { convertAmount, getExchangeRate, fetchLiveExchangeRates } from './currencies.js';
+
+// Helper to get active display currency from localStorage
+export function getActiveCurrency() {
+  if (typeof localStorage !== 'undefined') {
+    return localStorage.getItem('pft_currency') || 'USD';
+  }
+  return 'USD';
+}
 
 // Helper to determine if current session is a local demo user
 export function isDemoSession(userId) {
   return !userId || userId.startsWith('00000000-');
+}
+
+// Safe Date parser for local date-only strings (YYYY-MM-DD) avoiding UTC timezone off-by-one shifts
+export function parseLocalDate(dStr) {
+  if (!dStr) return null;
+  if (dStr instanceof Date) return dStr;
+  if (typeof dStr !== 'string') return new Date(dStr);
+  if (dStr.includes('T')) return new Date(dStr);
+  const parts = dStr.split('-');
+  if (parts.length === 3) {
+    const y = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10) - 1;
+    const d = parseInt(parts[2], 10);
+    if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
+      return new Date(y, m, d);
+    }
+  }
+  return new Date(dStr);
 }
 
 // Helper to get active user ID
@@ -349,16 +376,18 @@ export const api = {
   // ==========================================
   // EXPENSES
   // ==========================================
-  getExpenses: async (params = {}) => {
+  getExpenses: async (params = {}, targetCurrency = null) => {
     const userId = await getActiveUserId();
     if (!userId) return [];
+    const displayCurr = targetCurrency || getActiveCurrency();
 
+    let rawList = [];
     if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       let query = supabase.from('expenses').select('*, categories(name, icon)').eq('user_id', userId);
       if (params.category_id) query = query.eq('category_id', params.category_id);
       const { data, error } = await query.order('occurred_at', { ascending: false });
       if (error) throw error;
-      return data.map(e => ({
+      rawList = data.map(e => ({
         ...e,
         category_name: e.categories?.name || 'Uncategorized',
         category_icon: e.categories?.icon || 'tag'
@@ -368,20 +397,30 @@ export const api = {
       if (params.category_id) {
         list = list.filter(e => String(e.category_id) === String(params.category_id));
       }
-      return list.sort((a, b) => new Date(b.occurred_at) - new Date(a.occurred_at));
+      rawList = list.sort((a, b) => new Date(b.occurred_at) - new Date(a.occurred_at));
     }
+
+    return rawList.map(e => {
+      const origCurrency = e.currency || 'USD';
+      const origAmount = Number(e.amount || 0);
+      const converted = convertAmount(origAmount, origCurrency, displayCurr);
+      return {
+        ...e,
+        original_amount: origAmount,
+        original_currency: origCurrency,
+        amount: converted,
+        converted_amount: converted,
+        display_currency: displayCurr
+      };
+    });
   },
 
-  getCategoryTotals: async () => {
+  getCategoryTotals: async (targetCurrency = null) => {
     const userId = await getActiveUserId();
     if (!userId) return [];
+    const displayCurr = targetCurrency || getActiveCurrency();
 
-    if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
-      const { data, error } = await supabase.from('expense_category_totals_view').select('*').eq('user_id', userId);
-      if (!error && data) return data;
-    }
-    // Compute from local expenses
-    const expenses = getLocalStore('expenses', []).filter(e => e.user_id === userId);
+    const expenses = await api.getExpenses({}, displayCurr);
     const map = {};
     for (const exp of expenses) {
       const key = exp.category_id || 'uncat';
@@ -389,7 +428,7 @@ export const api = {
         map[key] = {
           category_id: exp.category_id,
           category_name: exp.category_name || 'Other',
-          category_icon: 'tag',
+          category_icon: exp.category_icon || 'tag',
           total_amount: 0,
           transaction_count: 0
         };
@@ -474,35 +513,56 @@ export const api = {
   // ==========================================
   // INCOMES
   // ==========================================
-  getIncomes: async (params = {}) => {
+  getIncomes: async (params = {}, targetCurrency = null) => {
     const userId = await getActiveUserId();
     if (!userId) return [];
+    const displayCurr = targetCurrency || getActiveCurrency();
 
+    let rawList = [];
     if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       let query = supabase.from('incomes_view').select('*').eq('user_id', userId);
       if (params.category_id) query = query.eq('category_id', params.category_id);
       const { data, error } = await query.order('start_date', { ascending: false });
       if (error) throw error;
-      return data;
+      rawList = data;
     } else {
       let list = getLocalStore('incomes', []).filter(i => i.user_id === userId);
       if (params.category_id) {
         list = list.filter(i => String(i.category_id) === String(params.category_id));
       }
-      return list.sort((a, b) => new Date(b.start_date) - new Date(a.start_date));
+      rawList = list.sort((a, b) => new Date(b.start_date) - new Date(a.start_date));
     }
+
+    return rawList.map(i => {
+      const origCurrency = i.currency || 'USD';
+      const origAmount = Number(i.amount || 0);
+      const converted = convertAmount(origAmount, origCurrency, displayCurr);
+      const period = Number(i.period_months) || 1;
+      const isOneTime = Number(i.period_months) === 0;
+      const monthlyEq = isOneTime ? 0 : Math.round((converted / period) * 100) / 100;
+      return {
+        ...i,
+        original_amount: origAmount,
+        original_currency: origCurrency,
+        amount: converted,
+        converted_amount: converted,
+        monthly_equivalent: monthlyEq,
+        display_currency: displayCurr
+      };
+    });
   },
 
-  getIncome: async (params = {}) => {
-    return api.getIncomes(params);
+  getIncome: async (params = {}, targetCurrency = null) => {
+    return api.getIncomes(params, targetCurrency);
   },
 
-  getIncomeSummary: async () => {
-    const incomes = await api.getIncomes();
+  getIncomeSummary: async (targetCurrency = null) => {
+    const displayCurr = targetCurrency || getActiveCurrency();
+    const incomes = await api.getIncomes({}, displayCurr);
     const totalReceived = incomes.reduce((acc, i) => acc + Number(i.converted_amount || i.amount || 0), 0);
     const activeIncomes = incomes.filter(i => i.is_active !== false);
     const recurringActive = activeIncomes.filter(i => Number(i.period_months) > 0);
-    const totalMonthly = recurringActive.reduce((acc, i) => acc + (Number(i.converted_amount || i.amount || 0) / (Number(i.period_months) || 1)), 0);
+    const totalMonthly = recurringActive.reduce((acc, i) => acc + Number(i.monthly_equivalent || (Number(i.amount || 0) / (Number(i.period_months) || 1))), 0);
 
     const catMap = {};
     incomes.forEach(i => {
@@ -521,7 +581,7 @@ export const api = {
       catMap[catId].total_received += amt;
       catMap[catId].count += 1;
       if (i.is_active !== false && Number(i.period_months) > 0) {
-        catMap[catId].monthly_amount += (amt / (Number(i.period_months) || 1));
+        catMap[catId].monthly_amount += Number(i.monthly_equivalent || (amt / (Number(i.period_months) || 1)));
       }
     });
 
@@ -652,32 +712,55 @@ export const api = {
   // ==========================================
   // DEBTS & PAYMENTS (Avalanche sort)
   // ==========================================
-  getDebts: async (params = {}) => {
+  getDebts: async (params = {}, targetCurrency = null) => {
     const userId = await getActiveUserId();
     if (!userId) return [];
+    const displayCurr = targetCurrency || getActiveCurrency();
 
+    let rawList = [];
     if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       let query = supabase.from('debts_avalanche_view').select('*').eq('user_id', userId);
       if (params.status_filter === 'active') query = query.eq('is_paid_off', false);
       if (params.status_filter === 'paid_off') query = query.eq('is_paid_off', true);
       const { data, error } = await query;
       if (error) throw error;
-      return data;
+      rawList = data;
     } else {
       let list = getLocalStore('debts', []).filter(d => d.user_id === userId);
       if (params.status_filter === 'active') list = list.filter(d => !d.is_paid_off);
       if (params.status_filter === 'paid_off') list = list.filter(d => d.is_paid_off);
-      // Avalanche sort: Active debts first, highest APR desc, highest balance desc
-      return list.sort((a, b) => {
+      rawList = list.sort((a, b) => {
         if (a.is_paid_off !== b.is_paid_off) return a.is_paid_off ? 1 : -1;
         if (b.interest_rate !== a.interest_rate) return b.interest_rate - a.interest_rate;
         return b.remaining_balance - a.remaining_balance;
       });
     }
+
+    return rawList.map(d => {
+      const origCurrency = d.currency || 'USD';
+      const origPrincipal = Number(d.principal_amount || 0);
+      const origPaid = Number(d.total_paid || 0);
+      const origRemaining = Number(d.remaining_balance !== undefined ? d.remaining_balance : Math.max(0, origPrincipal - origPaid));
+      const origMinPayment = Number(d.minimum_payment || 0);
+
+      return {
+        ...d,
+        original_principal: origPrincipal,
+        original_total_paid: origPaid,
+        original_remaining_balance: origRemaining,
+        original_currency: origCurrency,
+        principal_amount: convertAmount(origPrincipal, origCurrency, displayCurr),
+        total_paid: convertAmount(origPaid, origCurrency, displayCurr),
+        remaining_balance: convertAmount(origRemaining, origCurrency, displayCurr),
+        minimum_payment: convertAmount(origMinPayment, origCurrency, displayCurr),
+        display_currency: displayCurr
+      };
+    });
   },
 
-  getDebtSummary: async () => {
-    const debts = await api.getDebts();
+  getDebtSummary: async (targetCurrency = null) => {
+    const displayCurr = targetCurrency || getActiveCurrency();
+    const debts = await api.getDebts({}, displayCurr);
     const totalPrincipal = debts.reduce((acc, d) => acc + Number(d.principal_amount || 0), 0);
     const totalPaid = debts.reduce((acc, d) => acc + Number(d.total_paid || 0), 0);
     const totalRemaining = debts.reduce((acc, d) => acc + Number(d.remaining_balance || 0), 0);
@@ -820,6 +903,31 @@ export const api = {
     }
   },
 
+  getAllDebtPayments: async (targetCurrency = null) => {
+    const userId = await getActiveUserId();
+    if (!userId) return [];
+    const displayCurr = targetCurrency || getActiveCurrency();
+    let rawList = [];
+    if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
+      const { data, error } = await supabase.from('debt_payments').select('*').eq('user_id', userId).order('paid_date', { ascending: false });
+      if (error) throw error;
+      rawList = data || [];
+    } else {
+      rawList = getLocalStore('debt_payments', []).filter(p => p.user_id === userId);
+    }
+    return rawList.map(p => {
+      const origCurrency = p.currency || 'USD';
+      const origAmount = Number(p.amount || 0);
+      return {
+        ...p,
+        original_amount: origAmount,
+        original_currency: origCurrency,
+        amount: convertAmount(origAmount, origCurrency, displayCurr),
+        display_currency: displayCurr
+      };
+    });
+  },
+
   deleteDebtPayment: async (paymentId) => {
     const userId = await getActiveUserId();
     if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
@@ -850,28 +958,57 @@ export const api = {
   // ==========================================
   // SAVINGS GOALS & CONTRIBUTIONS
   // ==========================================
-  getSavingsGoals: async (params = {}) => {
+  getSavingsGoals: async (params = {}, targetCurrency = null) => {
     const userId = await getActiveUserId();
     if (!userId) return [];
+    const displayCurr = targetCurrency || getActiveCurrency();
 
+    let rawList = [];
     if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       let query = supabase.from('savings_goals_view').select('*').eq('user_id', userId);
       if (params.active_only) query = query.eq('is_active', true);
       const { data, error } = await query.order('name');
       if (error) throw error;
-      return data;
+      rawList = data;
     } else {
       let list = getLocalStore('savings_goals', []).filter(g => g.user_id === userId);
       if (params.active_only) list = list.filter(g => g.is_active);
-      return list.sort((a, b) => a.name.localeCompare(b.name));
+      rawList = list.sort((a, b) => a.name.localeCompare(b.name));
     }
+
+    return rawList.map(s => {
+      const origCurrency = s.currency || 'USD';
+      const origTarget = s.target_amount !== null && s.target_amount !== undefined ? Number(s.target_amount) : null;
+      const origSaved = Number(s.total_saved || 0);
+      const origContrib = Number(s.contribution_amount || 0);
+      const origMonthlyPlanned = Number(s.monthly_planned_contribution || s.contribution_amount || 0);
+
+      const convertedTarget = origTarget !== null ? convertAmount(origTarget, origCurrency, displayCurr) : null;
+      const convertedSaved = convertAmount(origSaved, origCurrency, displayCurr);
+      const convertedContrib = convertAmount(origContrib, origCurrency, displayCurr);
+      const convertedMonthly = convertAmount(origMonthlyPlanned, origCurrency, displayCurr);
+
+      return {
+        ...s,
+        original_target: origTarget,
+        original_total_saved: origSaved,
+        original_contribution: origContrib,
+        original_currency: origCurrency,
+        target_amount: convertedTarget,
+        total_saved: convertedSaved,
+        contribution_amount: convertedContrib,
+        monthly_planned_contribution: convertedMonthly,
+        display_currency: displayCurr
+      };
+    });
   },
 
-  getSavingsSummary: async () => {
-    const goals = await api.getSavingsGoals();
+  getSavingsSummary: async (targetCurrency = null) => {
+    const displayCurr = targetCurrency || getActiveCurrency();
+    const goals = await api.getSavingsGoals({}, displayCurr);
     const totalSaved = goals.reduce((acc, g) => acc + Number(g.total_saved || 0), 0);
     const recurringActive = goals.filter(g => g.is_active && Number(g.period_months) > 0);
-    const totalPlannedMonthly = recurringActive.reduce((acc, g) => acc + Number(g.monthly_planned_contribution || (g.contribution_amount / (g.period_months || 1))), 0);
+    const totalPlannedMonthly = recurringActive.reduce((acc, g) => acc + Number(g.monthly_planned_contribution || (Number(g.contribution_amount || 0) / (Number(g.period_months) || 1))), 0);
     const targetReached = goals.filter(g => g.target_amount && Number(g.total_saved) >= Number(g.target_amount)).length;
     return {
       total_saved: Math.round(totalSaved * 100) / 100,
@@ -1032,6 +1169,31 @@ export const api = {
     }
   },
 
+  getAllSavingsContributions: async (targetCurrency = null) => {
+    const userId = await getActiveUserId();
+    if (!userId) return [];
+    const displayCurr = targetCurrency || getActiveCurrency();
+    let rawList = [];
+    if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
+      const { data, error } = await supabase.from('savings_contributions').select('*').eq('user_id', userId).order('contributed_date', { ascending: false });
+      if (error) throw error;
+      rawList = data || [];
+    } else {
+      rawList = getLocalStore('savings_contributions', []).filter(c => c.user_id === userId);
+    }
+    return rawList.map(c => {
+      const origCurrency = c.currency || 'USD';
+      const origAmount = Number(c.amount || 0);
+      return {
+        ...c,
+        original_amount: origAmount,
+        original_currency: origCurrency,
+        amount: convertAmount(origAmount, origCurrency, displayCurr),
+        display_currency: displayCurr
+      };
+    });
+  },
+
   deleteSavingsContribution: async (contributionId) => {
     const userId = await getActiveUserId();
     if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
@@ -1063,38 +1225,43 @@ export const api = {
   // ==========================================
   // BUDGETS
   // ==========================================
-  getBudgets: async () => {
+  getBudgets: async (targetCurrency = null) => {
     const userId = await getActiveUserId();
     if (!userId) return [];
+    const displayCurr = targetCurrency || getActiveCurrency();
 
-    let budgets = [];
+    let rawBudgets = [];
     if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
       const { data, error } = await supabase.from('budgets').select('*, categories(name)').eq('user_id', userId);
       if (!error && data) {
-        budgets = data.map(b => ({ ...b, category_name: b.categories?.name }));
+        rawBudgets = data.map(b => ({ ...b, category_name: b.categories?.name }));
       }
     } else {
-      budgets = getLocalStore('budgets', []).filter(b => b.user_id === userId);
+      rawBudgets = getLocalStore('budgets', []).filter(b => b.user_id === userId);
     }
 
-    // Get current month expense actuals for each budget category
-    const expenses = await api.getExpenses();
+    // Get current month expense actuals in displayCurr
+    const expenses = await api.getExpenses({}, displayCurr);
     const now = new Date();
     const currentMonthExpenses = expenses.filter(e => {
-      const d = new Date(e.occurred_at);
-      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+      const d = parseLocalDate(e.occurred_at || e.created_at);
+      return d && d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
     });
 
-    return budgets.map(b => {
+    return rawBudgets.map(b => {
+      const origCurrency = b.currency || 'USD';
+      const origPlanned = Number(b.planned_amount || 0);
+      const planned = convertAmount(origPlanned, origCurrency, displayCurr);
       const actual = currentMonthExpenses
         .filter(e => String(e.category_id) === String(b.category_id))
         .reduce((sum, e) => sum + Number(e.amount), 0);
-      const planned = Number(b.planned_amount);
       const usage = planned > 0 ? Math.round((actual / planned) * 1000) / 10 : 0;
       return {
         budget_id: b.id,
         category_id: b.category_id,
         category_name: b.category_name || 'Category',
+        original_planned_amount: origPlanned,
+        original_currency: origCurrency,
         planned_amount: planned,
         actual_amount: Math.round(actual * 100) / 100,
         remaining_budget: Math.max(0, Math.round((planned - actual) * 100) / 100),
@@ -1102,7 +1269,7 @@ export const api = {
         usage_percent: usage,
         is_over_budget: actual > planned,
         period_months: b.period_months || 1,
-        currency: b.currency || 'USD'
+        currency: displayCurr
       };
     });
   },
@@ -1164,56 +1331,142 @@ export const api = {
   },
 
   // ==========================================
+  // OPENING BALANCE & LIQUID CASH
+  // ==========================================
+  getOpeningBalance: async (targetCurrency = null) => {
+    const userId = await getActiveUserId();
+    const displayCurr = targetCurrency || getActiveCurrency();
+    const defaultVal = { amount: 0, currency: displayCurr, original_amount: 0, original_currency: 'USD', effective_date: '2026-01-01' };
+    if (!userId) return defaultVal;
+
+    let balanceData = null;
+    if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
+      try {
+        const { data } = await supabase.auth.getUser();
+        const meta = data?.user?.user_metadata?.opening_balance;
+        if (meta && typeof meta === 'object') {
+          balanceData = {
+            amount: Number(meta.amount || 0),
+            currency: meta.currency || 'USD',
+            effective_date: meta.effective_date || '2026-01-01'
+          };
+        }
+      } catch (e) {
+        console.warn('Error fetching opening balance from auth:', e);
+      }
+    }
+
+    if (!balanceData) {
+      const saved = localStorage.getItem(`pft_opening_balance_${userId}`) || localStorage.getItem('pft_opening_balance');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          balanceData = {
+            amount: Number(parsed.amount || 0),
+            currency: parsed.currency || 'USD',
+            effective_date: parsed.effective_date || '2026-01-01'
+          };
+        } catch (e) {}
+      }
+    }
+
+    if (!balanceData) return defaultVal;
+
+    const origAmount = Number(balanceData.amount || 0);
+    const origCurrency = balanceData.currency || 'USD';
+    const converted = convertAmount(origAmount, origCurrency, displayCurr);
+
+    return {
+      amount: converted,
+      currency: displayCurr,
+      original_amount: origAmount,
+      original_currency: origCurrency,
+      effective_date: balanceData.effective_date || '2026-01-01'
+    };
+  },
+
+  setOpeningBalance: async (payload) => {
+    const userId = await getActiveUserId();
+    const balanceData = {
+      amount: Number(payload.amount || 0),
+      currency: payload.currency || 'USD',
+      effective_date: payload.effective_date || new Date().toISOString().slice(0, 10)
+    };
+
+    if (userId) {
+      localStorage.setItem(`pft_opening_balance_${userId}`, JSON.stringify(balanceData));
+    }
+    localStorage.setItem('pft_opening_balance', JSON.stringify(balanceData));
+
+    if (isLiveSupabaseConfigured() && !isDemoSession(userId)) {
+      try {
+        await supabase.auth.updateUser({
+          data: { opening_balance: balanceData }
+        });
+      } catch (e) {
+        console.warn('Failed to update supabase user metadata for opening balance:', e);
+      }
+    }
+    return balanceData;
+  },
+
+  // ==========================================
   // DASHBOARD COMPILATION
   // ==========================================
-  getDashboard: async (days = 30) => {
-    const [savingsSum, debtSum, incomeSum, expenses, budgets, incomes] = await Promise.all([
-      api.getSavingsSummary(),
-      api.getDebtSummary(),
-      api.getIncomeSummary(),
-      api.getExpenses(),
-      api.getBudgets(),
-      api.getIncome()
+  getDashboard: async (days = 30, targetCurrency = null) => {
+    const displayCurr = targetCurrency || getActiveCurrency();
+    const [savingsSum, debtSum, incomeSum, expenses, budgets, incomes, debts, debtPayments, savingsContribs, openingBalance] = await Promise.all([
+      api.getSavingsSummary(displayCurr),
+      api.getDebtSummary(displayCurr),
+      api.getIncomeSummary(displayCurr),
+      api.getExpenses({}, displayCurr),
+      api.getBudgets(displayCurr),
+      api.getIncome({}, displayCurr),
+      api.getDebts({}, displayCurr),
+      api.getAllDebtPayments(displayCurr).catch(() => []),
+      api.getAllSavingsContributions(displayCurr).catch(() => []),
+      api.getOpeningBalance(displayCurr).catch(() => ({ amount: 0, currency: displayCurr, effective_date: '2026-01-01' }))
     ]);
 
-    // 1. Stock Metric: Point-in-time Net Worth
+    // 1. Stock Metric: Point-in-time Net Worth (Total Savings Assets - Total Remaining Debts)
     const netWorth = Math.round((savingsSum.total_saved - debtSum.total_remaining) * 100) / 100;
     const stock = {
       net_worth: netWorth,
       total_savings: savingsSum.total_saved,
       total_debt: debtSum.total_remaining,
-      as_of_date: new Date().toISOString().slice(0, 10)
+      as_of_date: new Date().toISOString().slice(0, 10),
+      currency: displayCurr
     };
 
-    // 2. This Month's Actual Cash Flow (Did I earn more than I spent this month?)
+    // 2. This Month's Flow & Debt Breakdown
     const now = new Date();
     const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
 
     // Actual Expenses in current calendar month
     const monthExpenses = expenses.filter(e => {
-      const d = new Date(e.occurred_at || e.created_at);
-      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+      const d = parseLocalDate(e.occurred_at || e.created_at);
+      return d && d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
     });
-    const actualMonthExpense = Math.round(monthExpenses.reduce((sum, e) => sum + Number(e.converted_amount || e.amount || 0), 0) * 100) / 100;
+    const actualMonthExpense = Math.round(monthExpenses.reduce((sum, e) => sum + Number(e.amount || 0), 0) * 100) / 100;
 
-    // Actual Income in current calendar month (One-time inflows in this month + active recurring streams for this month)
+    // Actual Income in current calendar month (One-time inflows + active recurring streams in this month)
     let actualMonthIncome = 0;
     incomes.forEach(i => {
-      const amt = Number(i.converted_amount || i.amount || 0);
+      const amt = Number(i.amount || 0);
       const isOneTime = Number(i.period_months) === 0;
       if (isOneTime) {
         if (i.start_date) {
-          const d = new Date(i.start_date);
-          if (d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()) {
+          const d = parseLocalDate(i.start_date);
+          if (d && d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()) {
             actualMonthIncome += amt;
           }
         }
       } else {
         if (i.is_active !== false) {
-          const startDate = new Date(i.start_date);
-          const endDate = i.end_date ? new Date(i.end_date) : null;
-          if (startDate <= currentMonthEnd && (!endDate || endDate >= currentMonthStart)) {
+          const startDate = parseLocalDate(i.start_date);
+          const endDate = i.end_date ? parseLocalDate(i.end_date) : null;
+          if (startDate && startDate <= currentMonthEnd && (!endDate || endDate >= currentMonthStart)) {
             const monthlyPortion = Number(i.monthly_equivalent || (amt / (i.period_months || 1)));
             actualMonthIncome += monthlyPortion;
           }
@@ -1222,25 +1475,154 @@ export const api = {
     });
     actualMonthIncome = Math.round(actualMonthIncome * 100) / 100;
 
-    const thisMonthDifference = Math.round((actualMonthIncome - actualMonthExpense) * 100) / 100;
-    const isSurplus = thisMonthDifference > 0;
-    const isDeficit = thisMonthDifference < 0;
+    // Debt Payments made in current calendar month (cash outflow)
+    const monthDebtPaymentsList = debtPayments.filter(p => {
+      const d = parseLocalDate(p.paid_date);
+      return d && d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+    });
+    const actualMonthDebtPayments = Math.round(monthDebtPaymentsList.reduce((sum, p) => sum + Number(p.amount || 0), 0) * 100) / 100;
+
+    // New Debts borrowed in current calendar month (cash inflow)
+    const monthNewDebtList = debts.filter(d => {
+      const dt = parseLocalDate(d.start_date || d.created_at);
+      return dt && dt.getFullYear() === now.getFullYear() && dt.getMonth() === now.getMonth();
+    });
+    const actualMonthNewDebt = Math.round(monthNewDebtList.reduce((sum, d) => sum + Number(d.principal_amount || 0), 0) * 100) / 100;
+
+    // Savings Deposited in current calendar month
+    const monthSavingsContribsList = savingsContribs.filter(c => {
+      const cd = parseLocalDate(c.contributed_date);
+      return cd && cd.getFullYear() === now.getFullYear() && cd.getMonth() === now.getMonth();
+    });
+    const actualMonthSavingsDeposited = Math.round(monthSavingsContribsList.reduce((sum, c) => sum + Number(c.amount || 0), 0) * 100) / 100;
+
+    // LINE 1: Earned vs. Spent (Lifestyle coverage before debt): Income − Expense
+    const earnedVsSpent = Math.round((actualMonthIncome - actualMonthExpense) * 100) / 100;
+    const isEarnedSurplus = earnedVsSpent > 0;
+    const isEarnedDeficit = earnedVsSpent < 0;
+
+    // LINE 2: Real Cash Change This Month (Spendable cash change): Income − Expense − Debt Payments + New Debt Taken
+    const realCashChange = Math.round((actualMonthIncome - actualMonthExpense - actualMonthDebtPayments + actualMonthNewDebt) * 100) / 100;
+    const isCashPositive = realCashChange > 0;
+    const isCashNegative = realCashChange < 0;
 
     const this_month_flow = {
       month_name: now.toLocaleString('default', { month: 'long' }),
       year: now.getFullYear(),
+      currency: displayCurr,
       actual_income: actualMonthIncome,
       actual_expense: actualMonthExpense,
-      difference: thisMonthDifference,
-      abs_difference: Math.abs(thisMonthDifference),
-      is_surplus: isSurplus,
-      is_deficit: isDeficit,
-      is_even: thisMonthDifference === 0,
-      status_label: isSurplus ? 'Surplus' : isDeficit ? 'Deficit' : 'Balanced',
+      debt_payments: actualMonthDebtPayments,
+      new_debt_taken: actualMonthNewDebt,
+      savings_deposited: actualMonthSavingsDeposited,
+      
+      // Line 1 metrics
+      earned_vs_spent: earnedVsSpent,
+      abs_earned_vs_spent: Math.abs(earnedVsSpent),
+      is_earned_surplus: isEarnedSurplus,
+      is_earned_deficit: isEarnedDeficit,
+      is_earned_even: earnedVsSpent === 0,
+      earned_status_label: isEarnedSurplus ? 'Surplus' : isEarnedDeficit ? 'Deficit' : 'Balanced',
+
+      // Line 2 metrics
+      real_cash_change: realCashChange,
+      abs_real_cash_change: Math.abs(realCashChange),
+      is_cash_positive: isCashPositive,
+      is_cash_negative: isCashNegative,
+      is_cash_even: realCashChange === 0,
+      cash_status_label: isCashPositive ? 'Net Cash Inflow' : isCashNegative ? 'Net Cash Outflow' : 'Net Zero Change',
+
+      // Backward compatibility fields
+      difference: earnedVsSpent,
+      abs_difference: Math.abs(earnedVsSpent),
+      is_surplus: isEarnedSurplus,
+      is_deficit: isEarnedDeficit,
+      status_label: isEarnedSurplus ? 'Surplus' : isEarnedDeficit ? 'Deficit' : 'Balanced',
       month_expenses_count: monthExpenses.length
     };
 
-    // 3. Flow Metric: Normalized / Smoothed Monthly Cadence
+    // 3. Liquid Cash: Current Spendable Balance Calculation
+    const effectiveDate = openingBalance?.effective_date ? parseLocalDate(openingBalance.effective_date) : null;
+    const openingAmount = Number(openingBalance?.amount || 0);
+
+    let cumulativeIncome = 0;
+    incomes.forEach(i => {
+      const amt = Number(i.amount || 0);
+      const isOneTime = Number(i.period_months) === 0;
+      const itemDate = parseLocalDate(i.start_date || i.created_at);
+
+      if (isOneTime) {
+        if (!effectiveDate || (itemDate && itemDate >= effectiveDate)) {
+          cumulativeIncome += amt;
+        }
+      } else {
+        if (i.is_active !== false) {
+          const streamStart = parseLocalDate(i.start_date || i.created_at) || now;
+          const streamEnd = i.end_date ? parseLocalDate(i.end_date) : now;
+          const startRef = effectiveDate && effectiveDate > streamStart ? effectiveDate : streamStart;
+          const endRef = streamEnd < now ? streamEnd : now;
+
+          if (startRef <= endRef) {
+            const monthsCount = Math.max(1, (endRef.getFullYear() - startRef.getFullYear()) * 12 + (endRef.getMonth() - startRef.getMonth()) + 1);
+            const monthlyPortion = Number(i.monthly_equivalent || (amt / (Number(i.period_months) || 1)));
+            cumulativeIncome += (monthlyPortion * monthsCount);
+          }
+        } else if (!effectiveDate || (itemDate && itemDate >= effectiveDate)) {
+          cumulativeIncome += amt;
+        }
+      }
+    });
+
+    const cumulativeExpenses = expenses
+      .filter(e => {
+        if (!effectiveDate) return true;
+        const d = parseLocalDate(e.occurred_at || e.created_at);
+        return d && d >= effectiveDate;
+      })
+      .reduce((sum, e) => sum + Number(e.amount || 0), 0);
+
+    const cumulativeDebtPayments = debtPayments
+      .filter(p => {
+        if (!effectiveDate) return true;
+        const d = parseLocalDate(p.paid_date);
+        return d && d >= effectiveDate;
+      })
+      .reduce((sum, p) => sum + Number(p.amount || 0), 0);
+
+    const cumulativeNewDebt = debts
+      .filter(d => {
+        if (!effectiveDate) return true;
+        const dt = parseLocalDate(d.start_date || d.created_at);
+        return dt && dt >= effectiveDate;
+      })
+      .reduce((sum, d) => sum + Number(d.principal_amount || 0), 0);
+
+    const cumulativeSavingsDeposited = savingsContribs
+      .filter(c => {
+        if (!effectiveDate) return true;
+        const cd = parseLocalDate(c.contributed_date);
+        return cd && cd >= effectiveDate;
+      })
+      .reduce((sum, c) => sum + Number(c.amount || 0), 0);
+
+    const netCashFlowSinceOpening = Math.round((cumulativeIncome - cumulativeExpenses - cumulativeDebtPayments + cumulativeNewDebt - cumulativeSavingsDeposited) * 100) / 100;
+    const currentSpendableBalance = Math.round((openingAmount + netCashFlowSinceOpening) * 100) / 100;
+
+    const liquid_cash = {
+      current_spendable_balance: currentSpendableBalance,
+      opening_balance: openingAmount,
+      opening_date: openingBalance?.effective_date || '2026-01-01',
+      currency: displayCurr,
+      net_flow_since_opening: netCashFlowSinceOpening,
+      cumulative_income: Math.round(cumulativeIncome * 100) / 100,
+      cumulative_expense: Math.round(cumulativeExpenses * 100) / 100,
+      cumulative_debt_paid: Math.round(cumulativeDebtPayments * 100) / 100,
+      cumulative_new_debt: Math.round(cumulativeNewDebt * 100) / 100,
+      cumulative_savings_deposited: Math.round(cumulativeSavingsDeposited * 100) / 100,
+      has_custom_opening: Boolean(openingAmount > 0 || (openingBalance?.effective_date && openingBalance?.effective_date !== '2026-01-01'))
+    };
+
+    // 4. Flow Metric: Normalized / Smoothed Monthly Cadence
     const normalizedIncome = incomeSum.total_monthly_income;
     const plannedSavings = savingsSum.total_planned_monthly_savings;
     const plannedSavingsRate = normalizedIncome > 0 ? Math.round((plannedSavings / normalizedIncome) * 1000) / 10 : 0;
@@ -1251,10 +1633,11 @@ export const api = {
       actual_expense: actualMonthExpense,
       planned_savings: plannedSavings,
       planned_savings_rate_pct: plannedSavingsRate,
-      net_monthly_flow: netMonthlyFlow
+      net_monthly_flow: netMonthlyFlow,
+      currency: displayCurr
     };
 
-    // 4. Forecast Metric: 30 / 90 Days
+    // 5. Forecast Metric: 30 / 90 Days
     const dailyInflow = normalizedIncome / 30.44;
     const recurringExpenses = expenses.filter(e => e.is_recurring);
     const dailyRecurringOutflow = (recurringExpenses.reduce((sum, e) => sum + Number(e.amount), 0) + plannedSavings) / 30.44;
@@ -1266,14 +1649,16 @@ export const api = {
       forecast_days: days,
       projected_inflows: projectedInflows,
       projected_outflows: projectedOutflows,
-      projected_net_cash_flow: projectedNet
+      projected_net_cash_flow: projectedNet,
+      currency: displayCurr
     };
 
-    // 5. Budgets Adherence
+    // 6. Budgets Adherence
     const overBudgetCount = budgets.filter(b => b.is_over_budget).length;
 
     return {
       stock,
+      liquid_cash,
       this_month_flow,
       flow,
       forecast,
@@ -1300,9 +1685,12 @@ export const api = {
       await supabase.from('budgets').delete().eq('user_id', userId);
       await supabase.from('categories').delete().eq('user_id', userId);
     } else {
-      ['expenses', 'incomes', 'debts', 'debt_payments', 'savings_goals', 'savings_contributions', 'budgets'].forEach(k => {
+      ['expenses', 'incomes', 'debts', 'debt_payments', 'savings_goals', 'savings_contributions', 'budgets', 'opening_balance'].forEach(k => {
         localStorage.removeItem(`pft_${k}`);
       });
+      if (userId) {
+        localStorage.removeItem(`pft_opening_balance_${userId}`);
+      }
     }
   },
 
@@ -1315,9 +1703,12 @@ export const api = {
       } catch (e) {}
       await supabase.auth.signOut();
     } else {
-      ['expenses', 'incomes', 'debts', 'debt_payments', 'savings_goals', 'savings_contributions', 'budgets', 'demo_user'].forEach(k => {
+      ['expenses', 'incomes', 'debts', 'debt_payments', 'savings_goals', 'savings_contributions', 'budgets', 'demo_user', 'opening_balance'].forEach(k => {
         localStorage.removeItem(`pft_${k}`);
       });
+      if (userId) {
+        localStorage.removeItem(`pft_opening_balance_${userId}`);
+      }
     }
   }
 };

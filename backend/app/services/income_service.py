@@ -105,34 +105,45 @@ def get_incomes(
 
 def get_income_summary(user_id: int, target_date: date = None) -> dict:
     """
-    Computes total normalized monthly income and category breakdowns.
-    Excludes inactive streams or streams outside the target_date range.
+    Computes total normalized monthly income, actual total received, and category breakdowns.
     """
     if target_date is None:
         target_date = date.today()
 
-    incomes = get_incomes(user_id=user_id, active_only=True, target_date=target_date)
+    all_incomes = get_incomes(user_id=user_id, active_only=False)
+    active_incomes = get_incomes(user_id=user_id, active_only=True, target_date=target_date)
 
-    total_monthly_income = sum(inc.monthly_equivalent for inc in incomes)
+    total_received = sum(
+        float(inc.converted_amount if inc.converted_amount is not None else inc.amount)
+        for inc in all_incomes
+    )
+    total_monthly_income = sum(inc.monthly_equivalent for inc in active_incomes if inc.period_months > 0)
 
     category_map = {}
-    for inc in incomes:
+    for inc in all_incomes:
         cat_name = inc.category.name if inc.category else "Uncategorized"
         if cat_name not in category_map:
             category_map[cat_name] = {
                 "category_id": inc.category_id,
                 "category_name": cat_name,
+                "total_received": 0.0,
                 "monthly_amount": 0.0,
                 "stream_count": 0
             }
-        category_map[cat_name]["monthly_amount"] = round(
-            category_map[cat_name]["monthly_amount"] + inc.monthly_equivalent, 2
-        )
+        amt = float(inc.converted_amount if inc.converted_amount is not None else inc.amount)
+        category_map[cat_name]["total_received"] = round(category_map[cat_name]["total_received"] + amt, 2)
         category_map[cat_name]["stream_count"] += 1
+        if inc.is_active and inc.period_months > 0 and inc.is_active_on(target_date):
+            category_map[cat_name]["monthly_amount"] = round(
+                category_map[cat_name]["monthly_amount"] + inc.monthly_equivalent, 2
+            )
 
     return {
         "target_date": target_date.isoformat(),
+        "total_received": round(total_received, 2),
         "total_monthly_income": round(total_monthly_income, 2),
+        "total_streams_count": len(all_incomes),
+        "active_streams_count": len(active_incomes),
         "categories": list(category_map.values())
     }
 

@@ -21,7 +21,7 @@ import { getCurrencySymbol } from '../currencies';
 import { getRandomQuote } from '../quotes';
 import { DashboardSkeleton } from './Skeleton';
 
-export function DashboardView({ onNavigate, onOpenForm, onOpenReport, currency = 'USD' }) {
+export function DashboardView({ onNavigate, onOpenForm, onOpenReport, onOpenAccount, currency = 'USD' }) {
   const [forecastDays, setForecastDays] = useState(30);
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -34,7 +34,7 @@ export function DashboardView({ onNavigate, onOpenForm, onOpenReport, currency =
     try {
       setLoading(true);
       setError(null);
-      const res = await api.getDashboard(forecastDays);
+      const res = await api.getDashboard(forecastDays, currency);
       setDashboardData(res);
     } catch (err) {
       console.error('Failed to load dashboard:', err);
@@ -46,7 +46,7 @@ export function DashboardView({ onNavigate, onOpenForm, onOpenReport, currency =
 
   useEffect(() => {
     fetchDashboard();
-  }, [forecastDays]);
+  }, [forecastDays, currency]);
 
   if (loading) {
     return <DashboardSkeleton />;
@@ -57,6 +57,7 @@ export function DashboardView({ onNavigate, onOpenForm, onOpenReport, currency =
   }
 
   const stock = dashboardData?.stock;
+  const liquidCash = dashboardData?.liquid_cash;
   const thisMonth = dashboardData?.this_month_flow;
   const flow = dashboardData?.flow;
   const forecast = dashboardData?.forecast;
@@ -65,6 +66,8 @@ export function DashboardView({ onNavigate, onOpenForm, onOpenReport, currency =
   const netWorthNum = Number(stock?.net_worth || 0);
   const netWorthInt = Math.floor(Math.abs(netWorthNum)).toLocaleString();
   const netWorthCents = (Math.abs(netWorthNum) % 1).toFixed(2).substring(1);
+
+  const spendableBalanceNum = Number(liquidCash?.current_spendable_balance || 0);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -168,114 +171,257 @@ export function DashboardView({ onNavigate, onOpenForm, onOpenReport, currency =
       </div>
 
       {/* =========================================================================
-          2. THIS MONTH'S CASH FLOW: "DID I EARN MORE THAN I SPENT THIS MONTH?"
-          Plain, conversational, and instantly understandable
+          2. CURRENT SPENDABLE BALANCE CARD (LIQUID CASH RIGHT NOW)
+          Answers: "How much real spendable money do I actually have right now?"
+          ========================================================================= */}
+      <div className="glass-card" style={{
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border-color)',
+        borderRadius: '1.15rem',
+        padding: '1.25rem 1.35rem',
+        boxShadow: 'var(--card-shadow)'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.85rem' }}>
+          <div>
+            <div style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+              <span>💵 Current Spendable Balance</span>
+            </div>
+            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
+              Real spendable cash available right now (excludes money set aside in savings goals)
+            </div>
+          </div>
+
+          {onOpenAccount && (
+            <button
+              onClick={onOpenAccount}
+              style={{
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                color: 'var(--primary)',
+                background: 'rgba(99, 102, 241, 0.1)',
+                border: '1px solid rgba(99, 102, 241, 0.25)',
+                borderRadius: '9999px',
+                padding: '0.25rem 0.65rem',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+              title="Set or update your starting bank/wallet cash"
+            >
+              ⚙️ Opening Balance
+            </button>
+          )}
+        </div>
+
+        <div style={{
+          fontSize: '2.1rem',
+          fontWeight: 900,
+          color: spendableBalanceNum >= 0 ? 'var(--text-primary)' : 'var(--danger)',
+          letterSpacing: '-0.02em',
+          margin: '0.25rem 0'
+        }}>
+          {spendableBalanceNum < 0 && '-'}{currSymbol}{Math.abs(spendableBalanceNum).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </div>
+
+        {/* Breakdown chips of Starting Balance vs Cumulative Flow */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.65rem', marginTop: '0.85rem', paddingTop: '0.85rem', borderTop: '1px solid var(--border-color)' }}>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+            <span style={{ fontWeight: 700, color: 'var(--text-secondary)' }}>Opening Baseline:</span> {currSymbol}{Number(liquidCash?.opening_balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>as of {liquidCash?.opening_date || 'start date'}</div>
+          </div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+            <span style={{ fontWeight: 700, color: 'var(--text-secondary)' }}>Net Cash Flow Since Opening:</span>{' '}
+            <strong style={{ color: Number(liquidCash?.net_flow_since_opening || 0) >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+              {Number(liquidCash?.net_flow_since_opening || 0) >= 0 ? '+' : ''}{currSymbol}{Number(liquidCash?.net_flow_since_opening || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            </strong>
+            <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Income − Spending − Debt Paid − Savings</div>
+          </div>
+        </div>
+      </div>
+
+      {/* =========================================================================
+          3. THIS MONTH'S CASH FLOW: SPLIT INTO LINE 1 (EARNED VS SPENT) & LINE 2 (REAL CASH CHANGE)
           ========================================================================= */}
       <div className="glass-card" style={{
         position: 'relative',
         overflow: 'hidden',
-        border: thisMonth?.is_surplus 
-          ? '1px solid rgba(16, 185, 129, 0.35)' 
-          : thisMonth?.is_deficit 
-          ? '1px solid rgba(239, 68, 68, 0.35)' 
-          : '1px solid var(--border-color)',
-        background: 'var(--bg-card)'
+        border: '1px solid var(--border-color)',
+        background: 'var(--bg-card)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '1rem'
       }}>
-        {/* Top Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.15rem' }}>
+        {/* Top Card Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <div style={{ fontSize: '1.05rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.45rem', color: 'var(--text-primary)' }}>
               <span>📅 This Month at a Glance</span>
             </div>
             <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
-              Real cash earned vs real cash spent in {thisMonth?.month_name || 'this month'} {thisMonth?.year || ''}
+              Cash movement in {thisMonth?.month_name || 'this month'} {thisMonth?.year || ''}
             </div>
           </div>
 
-          <div style={{
-            fontSize: '0.78rem',
-            fontWeight: 800,
-            padding: '0.3rem 0.75rem',
+          <span style={{
+            fontSize: '0.75rem',
+            fontWeight: 700,
+            padding: '0.25rem 0.65rem',
             borderRadius: '9999px',
-            background: thisMonth?.is_surplus ? 'var(--success-bg)' : thisMonth?.is_deficit ? 'var(--danger-bg)' : 'var(--bg-subtle)',
-            color: thisMonth?.is_surplus ? 'var(--success-text)' : thisMonth?.is_deficit ? 'var(--danger-text)' : 'var(--text-secondary)',
-            border: thisMonth?.is_surplus ? '1px solid rgba(16, 185, 129, 0.25)' : thisMonth?.is_deficit ? '1px solid rgba(239, 68, 68, 0.25)' : '1px solid var(--border-color)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.35rem'
+            background: 'var(--bg-subtle)',
+            color: 'var(--text-secondary)',
+            border: '1px solid var(--border-color)'
           }}>
-            <span>{thisMonth?.is_surplus ? '🟢' : thisMonth?.is_deficit ? '🔴' : '⚪'}</span>
-            <span>{thisMonth?.is_surplus ? 'Surplus' : thisMonth?.is_deficit ? 'Deficit' : 'Balanced'}</span>
-          </div>
+            {thisMonth?.month_name} {thisMonth?.year}
+          </span>
         </div>
 
-        {/* Highlight Banner with Plain Language */}
+        {/* LINE 1: EARNED VS. SPENT (LIFESTYLE COVERAGE) */}
         <div style={{
-          background: thisMonth?.is_surplus 
-            ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.14) 0%, rgba(5, 150, 105, 0.06) 100%)' 
-            : thisMonth?.is_deficit 
-            ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.14) 0%, rgba(220, 38, 38, 0.06) 100%)' 
+          background: thisMonth?.is_earned_surplus 
+            ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(5, 150, 105, 0.05) 100%)' 
+            : thisMonth?.is_earned_deficit 
+            ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(220, 38, 38, 0.05) 100%)' 
             : 'var(--bg-subtle)',
           padding: '1.15rem 1.25rem',
           borderRadius: '1rem',
-          border: thisMonth?.is_surplus 
+          border: thisMonth?.is_earned_surplus 
             ? '1px solid rgba(16, 185, 129, 0.25)' 
-            : thisMonth?.is_deficit 
+            : thisMonth?.is_earned_deficit 
             ? '1px solid rgba(239, 68, 68, 0.25)' 
-            : '1px solid var(--border-color)',
-          marginBottom: '1.15rem'
+            : '1px solid var(--border-color)'
         }}>
-          <div style={{ fontSize: '0.76rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700, color: thisMonth?.is_surplus ? 'var(--success-text)' : thisMonth?.is_deficit ? 'var(--danger-text)' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 5 }}>
-            {thisMonth?.is_surplus ? <TrendingUp size={14} /> : thisMonth?.is_deficit ? <TrendingDown size={14} /> : <Scale size={14} />}
-            {thisMonth?.is_surplus ? 'Monthly Cash Surplus' : thisMonth?.is_deficit ? 'Monthly Cash Deficit' : 'Balanced Flow'}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+            <div style={{ fontSize: '0.76rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700, color: thisMonth?.is_earned_surplus ? 'var(--success-text)' : thisMonth?.is_earned_deficit ? 'var(--danger-text)' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 5 }}>
+              {thisMonth?.is_earned_surplus ? <TrendingUp size={14} /> : thisMonth?.is_earned_deficit ? <TrendingDown size={14} /> : <Scale size={14} />}
+              <span>Line 1: Earned vs. Spent</span>
+            </div>
+
+            <span style={{
+              fontSize: '0.72rem',
+              fontWeight: 800,
+              padding: '0.2rem 0.55rem',
+              borderRadius: '9999px',
+              background: thisMonth?.is_earned_surplus ? 'var(--success-bg)' : thisMonth?.is_earned_deficit ? 'var(--danger-bg)' : 'var(--bg-subtle)',
+              color: thisMonth?.is_earned_surplus ? 'var(--success-text)' : thisMonth?.is_earned_deficit ? 'var(--danger-text)' : 'var(--text-secondary)'
+            }}>
+              {thisMonth?.is_earned_surplus ? '🟢 Surplus' : thisMonth?.is_earned_deficit ? '🔴 Deficit' : '⚪ Balanced'}
+            </span>
           </div>
 
           <div style={{
-            fontSize: '2rem',
+            fontSize: '1.9rem',
             fontWeight: 900,
-            color: thisMonth?.is_surplus ? 'var(--success-text)' : thisMonth?.is_deficit ? 'var(--danger-text)' : 'var(--text-primary)',
+            color: thisMonth?.is_earned_surplus ? 'var(--success-text)' : thisMonth?.is_earned_deficit ? 'var(--danger-text)' : 'var(--text-primary)',
             letterSpacing: '-0.02em',
-            margin: '0.35rem 0'
+            margin: '0.2rem 0'
           }}>
-            {thisMonth?.is_surplus ? '+' : thisMonth?.is_deficit ? '-' : ''}{currSymbol}{Number(thisMonth?.abs_difference || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            {thisMonth?.is_earned_surplus ? '+' : thisMonth?.is_earned_deficit ? '-' : ''}{currSymbol}{Number(thisMonth?.abs_earned_vs_spent || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
 
-          {/* Plain, warm conversational message */}
-          <div style={{ fontSize: '0.92rem', fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.45 }}>
-            {thisMonth?.is_surplus ? (
-              <span>🎉 <strong>You saved {currSymbol}{Number(thisMonth?.abs_difference || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })} this month!</strong> You earned more than you spent.</span>
-            ) : thisMonth?.is_deficit ? (
-              <span>⚠️ <strong>You spent {currSymbol}{Number(thisMonth?.abs_difference || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })} more than you earned this month.</strong></span>
+          <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontStyle: 'italic', marginTop: '0.2rem' }}>
+            💡 Shows whether your income alone covers your spending — not your real cash balance.
+          </div>
+
+          <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--text-primary)', marginTop: '0.45rem' }}>
+            {thisMonth?.is_earned_surplus ? (
+              <span>🎉 <strong>You earned {currSymbol}{Number(thisMonth?.abs_earned_vs_spent || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })} more than your lifestyle spending this month!</strong></span>
+            ) : thisMonth?.is_earned_deficit ? (
+              <span>⚠️ <strong>Lifestyle spending exceeded income by {currSymbol}{Number(thisMonth?.abs_earned_vs_spent || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })} this month.</strong></span>
             ) : (
-              <span>⚖️ <strong>You broke even this month.</strong> Your income and spending are currently equal.</span>
+              <span>⚖️ <strong>Income and lifestyle spending are equal this month.</strong></span>
             )}
           </div>
         </div>
 
-        {/* Side-by-side Actual Inflow vs Actual Spending Pills */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
-          <div style={{ background: 'var(--bg-subtle)', padding: '0.9rem 1rem', borderRadius: '0.85rem', border: '1px solid var(--border-color)' }}>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
-              <Banknote size={14} color="var(--success)" /> Earned This Month
+        {/* LINE 2: REAL CASH CHANGE THIS MONTH (INCLUDES DEBT REPAYMENT & NEW LOANS) */}
+        <div style={{
+          background: 'var(--bg-subtle)',
+          padding: '1.15rem 1.25rem',
+          borderRadius: '1rem',
+          border: '1px solid var(--border-color)'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+            <div style={{ fontSize: '0.76rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <Banknote size={14} color="var(--primary)" />
+              <span>Line 2: Real Cash Change This Month</span>
             </div>
-            <div style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--success)', marginTop: '0.25rem' }}>
-              +{currSymbol}{Number(thisMonth?.actual_income || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-            </div>
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-              Real inflows received in {thisMonth?.month_name}
-            </div>
+
+            <span style={{
+              fontSize: '0.72rem',
+              fontWeight: 800,
+              padding: '0.2rem 0.55rem',
+              borderRadius: '9999px',
+              background: thisMonth?.is_cash_positive ? 'var(--success-bg)' : thisMonth?.is_cash_negative ? 'var(--danger-bg)' : 'var(--bg-card)',
+              color: thisMonth?.is_cash_positive ? 'var(--success-text)' : thisMonth?.is_cash_negative ? 'var(--danger-text)' : 'var(--text-secondary)'
+            }}>
+              {thisMonth?.is_cash_positive ? '🟢 Net Cash Inflow' : thisMonth?.is_cash_negative ? '🔴 Net Cash Outflow' : '⚪ Net Zero Change'}
+            </span>
           </div>
 
-          <div style={{ background: 'var(--bg-subtle)', padding: '0.9rem 1rem', borderRadius: '0.85rem', border: '1px solid var(--border-color)' }}>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
-              <Receipt size={14} color="var(--danger)" /> Spent This Month
+          <div style={{
+            fontSize: '1.9rem',
+            fontWeight: 900,
+            color: thisMonth?.is_cash_positive ? 'var(--success-text)' : thisMonth?.is_cash_negative ? 'var(--danger-text)' : 'var(--text-primary)',
+            letterSpacing: '-0.02em',
+            margin: '0.2rem 0'
+          }}>
+            {thisMonth?.is_cash_positive ? '+' : thisMonth?.is_cash_negative ? '-' : ''}{currSymbol}{Number(thisMonth?.abs_real_cash_change || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </div>
+
+          <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontStyle: 'italic', marginTop: '0.2rem' }}>
+            💡 Net change in spendable cash this month, including money spent on debt payoff or added from new loans.
+          </div>
+
+          <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--text-primary)', marginTop: '0.45rem' }}>
+            {Number(thisMonth?.debt_payments || 0) > 0 ? (
+              <span>
+                🏦 Includes <strong>{currSymbol}{Number(thisMonth?.debt_payments || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong> used to pay down debts this month.
+              </span>
+            ) : (
+              <span>No debt payments recorded this month.</span>
+            )}
+          </div>
+        </div>
+
+        {/* 4 Side-by-side Flow Breakdown Tiles */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.65rem' }}>
+          <div style={{ background: 'var(--bg-subtle)', padding: '0.75rem 0.85rem', borderRadius: '0.75rem', border: '1px solid var(--border-color)' }}>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <Banknote size={13} color="var(--success)" /> Earned
             </div>
-            <div style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--danger)', marginTop: '0.25rem' }}>
+            <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--success)', marginTop: '0.15rem' }}>
+              +{currSymbol}{Number(thisMonth?.actual_income || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            </div>
+            <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>Inflows received</div>
+          </div>
+
+          <div style={{ background: 'var(--bg-subtle)', padding: '0.75rem 0.85rem', borderRadius: '0.75rem', border: '1px solid var(--border-color)' }}>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <Receipt size={13} color="var(--danger)" /> Spent
+            </div>
+            <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--danger)', marginTop: '0.15rem' }}>
               -{currSymbol}{Number(thisMonth?.actual_expense || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
             </div>
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-              {thisMonth?.month_expenses_count || 0} expenses recorded
+            <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>{thisMonth?.month_expenses_count || 0} expenses</div>
+          </div>
+
+          <div style={{ background: 'var(--bg-subtle)', padding: '0.75rem 0.85rem', borderRadius: '0.75rem', border: '1px solid var(--border-color)' }}>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <CreditCard size={13} color="#fbbf24" /> Debt Paid
             </div>
+            <div style={{ fontWeight: 800, fontSize: '1.1rem', color: '#fbbf24', marginTop: '0.15rem' }}>
+              -{currSymbol}{Number(thisMonth?.debt_payments || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            </div>
+            <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>Principal & debt payoff</div>
+          </div>
+
+          <div style={{ background: 'var(--bg-subtle)', padding: '0.75rem 0.85rem', borderRadius: '0.75rem', border: '1px solid var(--border-color)' }}>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <PiggyBank size={13} color="#60a5fa" /> Saved to Goals
+            </div>
+            <div style={{ fontWeight: 800, fontSize: '1.1rem', color: '#60a5fa', marginTop: '0.15rem' }}>
+              +{currSymbol}{Number(thisMonth?.savings_deposited || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            </div>
+            <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>Stored in savings</div>
           </div>
         </div>
       </div>
@@ -327,7 +473,7 @@ export function DashboardView({ onNavigate, onOpenForm, onOpenReport, currency =
                 <Sparkles size={18} color="var(--primary)" /> Normalized Monthly Cadence
               </div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>
-                Smoothed recurring baseline vs actuals
+                Steady recurring baseline commitments
               </div>
             </div>
 
@@ -345,16 +491,16 @@ export function DashboardView({ onNavigate, onOpenForm, onOpenReport, currency =
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
             <div style={{ background: 'var(--bg-subtle)', padding: '0.875rem', borderRadius: '0.75rem' }}>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>Normalized Income</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>Recurring Baseline</div>
               <div style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--success)', marginTop: '0.2rem' }}>
-                +{currSymbol}{Number(flow?.normalized_income || 0).toFixed(2)}
+                +{currSymbol}{Number(flow?.normalized_income || 0).toFixed(2)}<span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>/mo</span>
               </div>
             </div>
 
             <div style={{ background: 'var(--bg-subtle)', padding: '0.875rem', borderRadius: '0.75rem' }}>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>Planned Savings</div>
               <div style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--primary)', marginTop: '0.2rem' }}>
-                +{currSymbol}{Number(flow?.planned_savings || 0).toFixed(2)}
+                +{currSymbol}{Number(flow?.planned_savings || 0).toFixed(2)}<span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>/mo</span>
               </div>
             </div>
           </div>

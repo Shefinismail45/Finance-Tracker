@@ -10,7 +10,9 @@ import {
   Download, 
   RefreshCw,
   CheckCircle2,
-  Calendar
+  Calendar,
+  Wallet,
+  Save
 } from 'lucide-react';
 import { api } from '../api';
 import { supabase } from '../supabaseClient';
@@ -22,6 +24,57 @@ export function AccountSettingsModal({ user, onClose, onLogout, onDataReset, onO
   const [isResetting, setIsResetting] = useState(false);
   const [statusMessage, setStatusMessage] = useState(null);
   const [error, setError] = useState(null);
+
+  // Opening Balance State
+  const [openingAmount, setOpeningAmount] = useState('0');
+  const [openingCurrency, setOpeningCurrency] = useState('USD');
+  const [openingDate, setOpeningDate] = useState('2026-01-01');
+  const [isSavingOpening, setIsSavingOpening] = useState(false);
+  const [openingSaved, setOpeningSaved] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadOpening = async () => {
+      try {
+        const bal = await api.getOpeningBalance();
+        if (isMounted && bal) {
+          setOpeningAmount(bal.amount !== undefined ? String(bal.amount) : '0');
+          setOpeningCurrency(bal.currency || 'USD');
+          setOpeningDate(bal.effective_date || '2026-01-01');
+        }
+      } catch (e) {
+        console.warn('Failed to load opening balance:', e);
+      }
+    };
+    loadOpening();
+    return () => { isMounted = false; };
+  }, []);
+
+  const handleSaveOpening = async (e) => {
+    if (e) e.preventDefault();
+    try {
+      setIsSavingOpening(true);
+      setError(null);
+      const parsedAmount = parseFloat(openingAmount);
+      await api.setOpeningBalance({
+        amount: isNaN(parsedAmount) ? 0 : parsedAmount,
+        currency: openingCurrency,
+        effective_date: openingDate || '2026-01-01'
+      });
+      setOpeningSaved(true);
+      setStatusMessage('Opening balance saved! Current Balance updated.');
+      if (onDataReset) onDataReset();
+      setTimeout(() => {
+        setOpeningSaved(false);
+        setStatusMessage(null);
+      }, 3000);
+    } catch (err) {
+      console.error('Failed to save opening balance:', err);
+      setError(err.message || 'Failed to update opening balance.');
+    } finally {
+      setIsSavingOpening(false);
+    }
+  };
 
   const userName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'User';
   const userEmail = user?.email || 'demo.user@example.com';
@@ -198,6 +251,81 @@ export function AccountSettingsModal({ user, onClose, onLogout, onDataReset, onO
                   <div style={{ fontWeight: 700, marginTop: '2px' }}>{createdAt}</div>
                 </div>
               </div>
+            </div>
+
+            {/* Opening Balance Configuration */}
+            <div style={{ background: 'var(--bg-subtle)', padding: '1rem 1.25rem', borderRadius: '1rem', border: '1px solid var(--border-color)' }}>
+              <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.35rem' }}>
+                <Wallet size={16} color="var(--primary)" />
+                <span>Opening Balance (Starting Liquid Cash)</span>
+              </div>
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.4, margin: '0 0 0.85rem 0' }}>
+                Real cash you had in your bank or wallet when you started using the tracker. Used to calculate your live <strong>Current Spendable Balance</strong>.
+              </p>
+
+              <form onSubmit={handleSaveOpening} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr', gap: '0.65rem' }}>
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label style={{ fontSize: '0.75rem', fontWeight: 700 }}>Starting Amount</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      className="form-control"
+                      placeholder="0.00"
+                      value={openingAmount}
+                      onChange={(e) => setOpeningAmount(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label style={{ fontSize: '0.75rem', fontWeight: 700 }}>Currency</label>
+                    <select
+                      className="form-control"
+                      value={openingCurrency}
+                      onChange={(e) => setOpeningCurrency(e.target.value)}
+                    >
+                      <option value="USD">USD ($)</option>
+                      <option value="INR">INR (₹)</option>
+                      <option value="EUR">EUR (€)</option>
+                      <option value="GBP">GBP (£)</option>
+                      <option value="CAD">CAD ($)</option>
+                      <option value="AUD">AUD ($)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label style={{ fontSize: '0.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <Calendar size={12} /> Effective Starting Date
+                  </label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={openingDate}
+                    onChange={(e) => setOpeningDate(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  disabled={isSavingOpening}
+                  style={{
+                    padding: '0.55rem 1rem',
+                    fontSize: '0.85rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.45rem',
+                    marginTop: '0.25rem'
+                  }}
+                >
+                  <Save size={14} />
+                  {isSavingOpening ? 'Saving Balance...' : openingSaved ? 'Saved!' : 'Save Starting Balance'}
+                </button>
+              </form>
             </div>
 
             {/* Data Actions */}
